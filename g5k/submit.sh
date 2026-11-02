@@ -10,6 +10,7 @@
 # Submitting again is how an unfinished replication continues: every job resumes the checkpoints.
 #
 # Environment variables:
+#   EXTRA       1 (default): the paper's 30 projects and the 24 extra ones; 0: the 30 only
 #   WALLTIME    default 14:00:00
 #   NODES       candidate "queue:cluster" pairs, tried in this order until one is accepted.
 #               Default (Rennes): default:paradoxe  2 x Xeon Gold 5320, 52 cores, 384 GiB, no GPU.
@@ -36,7 +37,7 @@ submit_one() { # start|now
           -O "$STORE/oar/%jobid%.out" -E "$STORE/oar/%jobid%.err")
     [ "$start" = now ] || args+=(-r "$start")
     echo "--> $cluster ($queue queue), start: $start, walltime: $WALLTIME"
-    if out="$(oarsub "${args[@]}" "$PKG/g5k/job.sh" 2>&1)" \
+    if out="$(oarsub "${args[@]}" "env EXTRA=${EXTRA:-1} $PKG/g5k/job.sh" 2>&1)" \
        && ! grep -qiE "KO|not valid|error|rejected|denied" <<< "$out"; then
       echo "$out" | sed 's/^/    /'
       echo "    Accepted. Job output: $STORE/oar/<jobid>.out, progress: bin/status.sh"

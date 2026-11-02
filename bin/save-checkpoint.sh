@@ -3,6 +3,7 @@
 # this script, so its directory does not change meanwhile: the archive is a consistent state.
 # The previous archive is replaced only once the new one is complete.
 set -euo pipefail
+unset LD_LIBRARY_PATH   # inherited from the VM launcher: use the system libraries
 PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PKG/config.sh"
 p="$1"

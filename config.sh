@@ -20,11 +20,27 @@ PHARO_URL="${PHARO_URL:-https://get.pharo.org/64/140+vm}"
 STORE="${STORE:-$HOME/hvh-store}"
 WORK="${WORK:-/tmp/hvh-$(id -un)}"
 
-# The 30 projects (selectors of CooHistoryExperimentConfiguration). The longest ones come first, so
-# they start first when PARALLEL is smaller than the number of projects.
-ALL_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJava druid album bloc
+# The 30 projects of the paper (selectors of CooHistoryExperimentConfiguration). The longest ones
+# come first, so they start first when PARALLEL is smaller than the number of projects.
+PAPER_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJava druid album bloc
   polyMath gitProjectHealth mooseIDE chanel famix pharoLauncher treeSitter osSubprocess microdown
   dataFrame alexandrie voyage pillar fame teapot seaside mooseCI tinyLogger roassal moose)
+
+# 24 extra projects, defined by the package (pharo/src/HVH-Replication/
+# CooHistoryExperimentConfiguration.extension.st), to fill a big node. Their results go to
+# $STORE/results-extra and never into the paper results. EXTRA=0 runs the paper's 30 only.
+# Tried and left out: kendrick (its baseline does not load in Pharo 14: "Conflicting repositories"),
+# willow, buoy, stargate (ba-st baselines that do not load in Pharo 14), mapless (the benchmark's
+# CoTypeInferencer fails on it: #lookupSelector: sent to nil).
+EXTRA_PROJECTS=(soil molecule pyramid telescope xmlParser materialDesignLite cormas muTalk coypu
+  pharoLanguageServer fast moTion aiGraphAlgorithms petitParser2 taskIt codeParadise p3 openAPI
+  mongoTalk grease parasol neoCSV neoJSON reStore)
+
+if [ "${EXTRA:-1}" = 1 ]; then ALL_PROJECTS=("${PAPER_PROJECTS[@]}" "${EXTRA_PROJECTS[@]}")
+else ALL_PROJECTS=("${PAPER_PROJECTS[@]}"); fi
+
+is_extra() { local e; for e in "${EXTRA_PROJECTS[@]}"; do [ "$e" = "$1" ] && return 0; done; return 1; }
+results_of() { if is_extra "$1"; then echo "$STORE/results-extra/$1"; else echo "$STORE/results/$1"; fi; }
 
 PARALLEL="${PARALLEL:-0}"                         # images at once; 0 = all projects
 CHECKPOINT_MINUTES="${CHECKPOINT_MINUTES:-30}"   # minutes between two checkpoints of an image

@@ -24,6 +24,20 @@ The 30 studied projects are loaded from their branches and replayed over their l
 first-parent commits, exactly as the benchmark defines them. Running the package later
 therefore replays more recent histories.
 
+### Extra projects
+
+To use a whole node, the package also defines 24 **extra projects**, which are not in the paper:
+Soil, Molecule, Pyramid, Telescope, XMLParser, MaterialDesignLite, Cormas, MuTalk, Coypu,
+PharoLanguageServer, FAST, MoTion, AIGraphAlgorithms, PetitParser2, TaskIt, CodeParadise, P3,
+OpenAPI, MongoTalk, Grease, Parasol, NeoCSV, NeoJSON and ReStore (`config.sh` lists the projects
+that were tried and left out, and why). They are defined in
+`pharo/src/HVH-Replication/CooHistoryExperimentConfiguration.extension.st` in the same way as the
+paper's projects: last 200 first-parent commits of the branch that is loaded.
+
+Their results go to `STORE/results-extra/`, with their own summary, and `STORE/results-all/`
+summarizes all 54 projects. `paper-results/` still covers only the paper's 30. `EXTRA=0` runs only
+the 30 (`EXTRA=0 g5k/submit.sh`).
+
 ## Quick start on Grid'5000 (Rennes)
 
 ```bash
@@ -73,7 +87,10 @@ pharo/src/HVH-Replication   the additions (Tonel package)
 - **Storage.** `STORE` (default `~/hvh-store`) is persistent: sources, base image, checkpoints,
   results and logs. `WORK` (default `/tmp/hvh-$USER`) is the node's local disk, where the images
   run. It has the same absolute path on every node, because a saved image remembers the
-  absolute paths of its git clones.
+  absolute paths of its git clones. Each image also has its own `HOME` and `TMPDIR`, because some
+  baselines write in `~/Documents` (TreeSitter clones its grammars there with the system `git`).
+  The commands an image runs (`git`, `gcc`, `make`, ...) go through shims that drop the VM's
+  `LD_LIBRARY_PATH`: with it, the system `git` crashes on the VM's bundled `libssh2`.
 - **Checkpoints.** After each replayed commit, an image saves itself if 30 minutes have passed
   (`CHECKPOINT_MINUTES`). It then calls `save-checkpoint.sh`, which writes
   `STORE/checkpoints/<project>.tar.zst` (about 20 MB for TinyLogger, a few hundred MB for the big
@@ -83,6 +100,12 @@ pharo/src/HVH-Replication   the additions (Tonel package)
   replay process carries on at the next commit, with its session, history, statistics,
   benchmarks and CSV logs exactly as they were. Projects that are done are skipped. A project
   whose experiment raises an error is marked failed and not retried (`RETRY_FAILED=1` retries it).
+- **Removed classes.** Checking out an older commit can remove a class that registered itself for
+  image startup/shutdown (`ClapCommandLineHandler` in pharoLauncher, `GPHBridge` in
+  gitProjectHealth), and saving the image then fails on it. Such handlers are set aside during the
+  snapshot and put back at the same place right after. Every image, fresh or resumed, first
+  reloads `HVH-Replication` from the package (`pharo/update.st`), so a checkpoint saved by an older
+  version of the additions runs the current one.
 - **The additions change nothing that is measured.** `HVH-Replication` only clones over HTTPS,
   closes and reopens the two CSV logs around a snapshot, and adds the checkpoint call (plus a
   progress line) at the end of `CooHistoryExperimentRunner>>replayCommits:session:benchmarks:`.
@@ -101,7 +124,8 @@ a crash loses at most the last 30 minutes of each project: run `bin/run.sh` agai
 
 - `STORE/results/<project>/`: CSV observations (`*-callsites.csv`, `*-ranks.csv`), STON results,
   figures and LaTeX tables per project
-- `STORE/results/summary.{md,csv,tex,svg,png}`
+- `STORE/results/summary.{md,csv,tex,svg,png}` (the paper's 30), plus `STORE/results-extra/` and
+  `STORE/results-all/` with their own summaries
 - `STORE/paper-results/`: `results-macros.tex`, `tables/*.tex`, `data/*.dat` and `summary.json`
 - `STORE/logs/<project>.log`: one log per project, with every attempt appended
 

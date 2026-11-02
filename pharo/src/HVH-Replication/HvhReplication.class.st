@@ -33,15 +33,20 @@ HvhReplication class >> checkpointWith: aLog [
 	"Save the image. Execution continues right after the snapshot twice: now, and every time the
 	saved image is reopened. Only now is the hook run, to archive the fresh checkpoint."
 
-	| session hook start |
+	| session hook start dangling |
 	start := DateAndTime now.
 	aLog hvhSuspend.
+	dangling := self removeDanglingSessionHandlers.
 	session := Smalltalk session.
 	Smalltalk snapshot: true andQuit: false.
+	self restoreSessionHandlers: dangling.
 	LastCheckpoint := DateAndTime now.
 	aLog hvhResume.
 	Smalltalk session == session ifFalse: [
 		^ self log: 'Checkpoint: resumed from a saved image' ].
+	dangling ifNotEmpty: [
+		self log: 'Checkpoint: set aside the session handlers of removed classes: '
+			, (' ' join: (dangling collect: [ :each | each third handlerId asString ])) ].
 	hook := self env: 'HVH_CHECKPOINT_HOOK' ifAbsent: [
 		        ^ self log: 'Checkpoint: image saved in ' , (DateAndTime now - start) printString ].
 	(LibC uniqueInstance system: hook) = 0
@@ -50,6 +55,44 @@ HvhReplication class >> checkpointWith: aLog [
 				'Checkpoint: image saved and archived in ' , (DateAndTime now - start) printString ]
 		ifFalse: [ self log: 'Checkpoint: image saved, but the hook failed: ' , hook ].
 	LastCheckpoint := DateAndTime now
+]
+
+{ #category : 'checkpoint' }
+HvhReplication class >> isDangling: aHandler [
+	"A class registered for startup/shutdown that a checkout of the replay has removed."
+
+	^ (aHandler isKindOf: ClassSessionHandler) and: [
+		  (Smalltalk globals includesKey:
+			   (aHandler instVarNamed: #registeredClassName) asSymbol) not ]
+]
+
+{ #category : 'checkpoint' }
+HvhReplication class >> removeDanglingSessionHandlers [
+	"The replay checks out older commits, which can remove a class that registered itself for
+	startup/shutdown. The snapshot then fails on it (KeyNotFound). Such handlers are taken out of
+	their list during the snapshot and put back after it, at the same place, so the image goes on
+	exactly as without a checkpoint. Answer {list. index. handler} triples, by increasing index."
+
+	| removed |
+	removed := OrderedCollection new.
+	(SessionManager default instVarNamed: #categories) do: [ :category |
+		(category instVarNamed: #priorityLists) valuesDo: [ :handlers |
+			handlers doWithIndex: [ :handler :index |
+				(self isDangling: handler) ifTrue: [
+					removed add: { handlers. index. handler } ] ] ] ].
+	removed reverseDo: [ :each | each first removeIndex: each second ].
+	^ removed asArray
+]
+
+{ #category : 'checkpoint' }
+HvhReplication class >> restoreSessionHandlers: triples [
+
+	triples do: [ :each |
+		| handlers |
+		handlers := each first.
+		each second > handlers size
+			ifTrue: [ handlers addLast: each third ]
+			ifFalse: [ handlers add: each third beforeIndex: each second ] ]
 ]
 
 { #category : 'environment' }
