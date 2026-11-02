@@ -1,0 +1,6 @@
+hvh-store/
+*.image
+*.changes
+*.sources
+pharo-vm/
+pharo-local/
