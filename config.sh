@@ -26,14 +26,14 @@ PAPER_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJav
   polyMath gitProjectHealth mooseIDE chanel famix pharoLauncher treeSitter osSubprocess microdown
   dataFrame alexandrie voyage pillar fame teapot seaside mooseCI tinyLogger roassal moose)
 
-# 24 extra projects, defined by the package (pharo/src/HVH-Replication/
+# 23 extra projects, defined by the package (pharo/src/HVH-Replication/
 # CooHistoryExperimentConfiguration.extension.st), to fill a big node. Their results go to
 # $STORE/results-extra and never into the paper results. EXTRA=0 runs the paper's 30 only.
 # Tried and left out: kendrick (its baseline does not load in Pharo 14: "Conflicting repositories"),
 # willow, buoy, stargate (ba-st baselines that do not load in Pharo 14), mapless (the benchmark's
-# CoTypeInferencer fails on it: #lookupSelector: sent to nil).
+# CoTypeInferencer fails on it: #lookupSelector: sent to nil), codeParadise (one image takes 48 GB).
 EXTRA_PROJECTS=(soil molecule pyramid telescope xmlParser materialDesignLite cormas muTalk coypu
-  pharoLanguageServer fast moTion aiGraphAlgorithms petitParser2 taskIt codeParadise p3 openAPI
+  pharoLanguageServer fast moTion aiGraphAlgorithms petitParser2 taskIt p3 openAPI
   mongoTalk grease parasol neoCSV neoJSON reStore)
 
 if [ "${EXTRA:-1}" = 1 ]; then ALL_PROJECTS=("${PAPER_PROJECTS[@]}" "${EXTRA_PROJECTS[@]}")
@@ -42,6 +42,28 @@ else ALL_PROJECTS=("${PAPER_PROJECTS[@]}"); fi
 is_extra() { local e; for e in "${EXTRA_PROJECTS[@]}"; do [ "$e" = "$1" ] && return 0; done; return 1; }
 results_of() { if is_extra "$1"; then echo "$STORE/results-extra/$1"; else echo "$STORE/results/$1"; fi; }
 
-PARALLEL="${PARALLEL:-0}"                         # images at once; 0 = all projects
+# Every project is split into units that run in parallel images, on one or several machines:
+# one unit per strategy (8) and per slice of the call sites. A unit replays every commit with the
+# same history, but completes only the call sites of its strategy and slice (bin/merge-units.py
+# joins the units of a project). The projects whose single commits take hours get more slices.
+STRATEGIES=(Baseline Semantic History Dependency HistoryAfterSelf Hybrid HybridHD HybridDH)
+slices_of() {
+  case "$1" in
+    toplo|fastPython|glorp) echo 8 ;;
+    druid|fastTypescript) echo 4 ;;
+    openPonk|fastJava|chatPharo|bloc|polyMath|gitProjectHealth|mooseIDE|album) echo 2 ;;
+    *) echo 1 ;;
+  esac
+}
+units_of() { # project: its units, <project>.<k> with k = slice * 8 + strategy index
+  local k n=$(( $(slices_of "$1") * ${#STRATEGIES[@]} ))
+  for ((k = 0; k < n; k++)); do echo "$1.$k"; done
+}
+project_of() { echo "${1%.*}"; }
+strategy_of() { echo "${STRATEGIES[$(( ${1##*.} % ${#STRATEGIES[@]} ))]}"; }
+slice_of() { echo "$(( ${1##*.} / ${#STRATEGIES[@]} ))/$(slices_of "$(project_of "$1")")"; }
+
+PARALLEL="${PARALLEL:-0}"                         # images at once on this machine; 0 = cores - 2
+MIN_FREE_GB="${MIN_FREE_GB:-24}"                  # no new image below this much free memory
 CHECKPOINT_MINUTES="${CHECKPOINT_MINUTES:-30}"   # minutes between two checkpoints of an image
 RETRY_FAILED="${RETRY_FAILED:-0}"                # 1 = run again the projects that failed before

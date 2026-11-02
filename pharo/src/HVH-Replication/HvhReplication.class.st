@@ -10,13 +10,18 @@ Environment variables, read at every commit:
   HVH_CHECKPOINT_MINUTES  minutes between two checkpoints (default 30)
   HVH_CHECKPOINT_REQUEST  a file: touching it asks for a checkpoint after the current commit
   HVH_CHECKPOINT_HOOK     a shell command run after each checkpoint (archives it to persistent storage)
+  HVH_STRATEGY            only this strategy completes the call sites (empty: every strategy)
+  HVH_SLICE               j/n: only the call sites whose id hashes to j modulo n are completed
+A project is thus split into units (strategy x slice) that replay the same commits with the same
+history in parallel images; bin/merge-units.py joins their CSV observations.
 "
 Class {
 	#name : 'HvhReplication',
 	#superclass : 'Object',
 	#classVars : [
 		'LastCheckpoint',
-		'LogFiles'
+		'LogFiles',
+		'Unit'
 	],
 	#category : 'HVH-Replication',
 	#package : 'HVH-Replication'
@@ -95,6 +100,37 @@ HvhReplication class >> restoreSessionHandlers: triples [
 			ifFalse: [ handlers add: each third beforeIndex: each second ] ]
 ]
 
+{ #category : 'units' }
+HvhReplication class >> benches: aStrategyName id: aCallsiteId [
+	"Does this image complete the call site aCallsiteId (CooCallsiteLog>>#idFor:target:) with the
+	strategy aStrategyName? The other call sites are left to the other units of the project."
+
+	| unit |
+	unit := self unit.
+	(unit first isNil or: [ unit first = aStrategyName asString ]) ifFalse: [ ^ false ].
+	^ (self stableHashOf: aCallsiteId) \\ unit third = unit second
+]
+
+{ #category : 'units' }
+HvhReplication class >> stableHashOf: aString [
+	"The same in every image and every Pharo version, unlike #hash."
+
+	^ aString inject: 0 into: [ :hash :character |
+		  hash * 31 + character asInteger \\ 2147483647 ]
+]
+
+{ #category : 'units' }
+HvhReplication class >> unit [
+	"{strategy name or nil. slice. slices}, read once from HVH_STRATEGY and HVH_SLICE."
+
+	^ Unit ifNil: [
+		  | strategy slice |
+		  strategy := self env: 'HVH_STRATEGY' ifAbsent: [ nil ].
+		  slice := ((self env: 'HVH_SLICE' ifAbsent: [ '0/1' ]) substrings: '/') collect: [ :each |
+			           each asNumber ].
+		  Unit := { strategy. slice first. slice second } ]
+]
+
 { #category : 'environment' }
 HvhReplication class >> env: aName ifAbsent: aBlock [
 
@@ -161,7 +197,10 @@ HvhReplication class >> runConfigurationNamed: aSelector outputDirectory: aDirec
 	configuration repository: (self httpsUrlFor: configuration repository).
 	configuration outputDirectory: aDirectory asFileReference.
 	LastCheckpoint := DateAndTime now.
-	self log: 'Running ' , aSelector , ' on ' , configuration repository.
+	Unit := nil.
+	self log: 'Running ' , aSelector , ' on ' , configuration repository , ', strategy '
+		, (self unit first ifNil: [ 'all' ]) , ', slice ' , self unit second printString , '/'
+		, self unit third printString.
 	^ [ CooHistoryExperimentRunner new run: configuration ]
 		  on: Warning
 		  do: [ :warning |

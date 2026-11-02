@@ -10,6 +10,7 @@
 # Submitting again is how an unfinished replication continues: every job resumes the checkpoints.
 #
 # Environment variables:
+#   HOSTS       nodes to reserve (default 1): one job, and one worker, per node; they share the units
 #   EXTRA       1 (default): the paper's 30 projects and the 24 extra ones; 0: the 30 only
 #   WALLTIME    default 14:00:00
 #   NODES       candidate "queue:cluster" pairs, tried in this order until one is accepted.
@@ -29,7 +30,7 @@ mkdir -p "$STORE/oar"
 chmod +x "$PKG"/bin/*.sh "$PKG"/g5k/*.sh
 
 submit_one() { # start|now
-  local start="$1" candidate queue cluster out
+  local start="$1" candidate queue cluster out h accepted=0
   for candidate in "${CANDIDATES[@]}"; do
     queue="${candidate%%:*}"; cluster="${candidate#*:}"
     args=(-q "$queue" -p "cluster='$cluster'" -l "host=1,walltime=$WALLTIME"
@@ -37,14 +38,19 @@ submit_one() { # start|now
           -O "$STORE/oar/%jobid%.out" -E "$STORE/oar/%jobid%.err")
     [ "$start" = now ] || args+=(-r "$start")
     echo "--> $cluster ($queue queue), start: $start, walltime: $WALLTIME"
-    if out="$(oarsub "${args[@]}" "env EXTRA=${EXTRA:-1} $PKG/g5k/job.sh" 2>&1)" \
-       && ! grep -qiE "KO|not valid|error|rejected|denied" <<< "$out"; then
-      echo "$out" | sed 's/^/    /'
-      echo "    Accepted. Job output: $STORE/oar/<jobid>.out, progress: bin/status.sh"
+    for ((h = accepted; h < ${HOSTS:-1}; h++)); do
+      if out="$(oarsub "${args[@]}" "env EXTRA=${EXTRA:-1} $PKG/g5k/job.sh" 2>&1)" \
+         && ! grep -qiE "KO|not valid|error|rejected|denied" <<< "$out"; then
+        echo "$out" | sed 's/^/    /'; accepted=$((accepted + 1))
+      else
+        echo "$out" | sed 's/^/    /'; break
+      fi
+    done
+    if [ "$accepted" -ge "${HOSTS:-1}" ]; then
+      echo "    Accepted ($accepted node(s)). Job output: $STORE/oar/<jobid>.out, progress: bin/status.sh"
       return 0
     fi
-    echo "$out" | sed 's/^/    /'
-    echo "    Not accepted, trying the next candidate."
+    echo "    $accepted of ${HOSTS:-1} node(s) accepted here, trying the next candidate."
   done
   echo "No candidate node accepted the job (start: $start)." >&2
   return 1

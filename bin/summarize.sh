@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Aggregate the finished projects into the summary (Pharo) and the paper folder (Python):
-#   $STORE/results/summary.{svg,png,md,csv,tex}           the 30 projects of the paper
-#   $STORE/results-extra/summary.*, $STORE/results-all/summary.*   the extra projects, and all
-#   $STORE/paper-results/   tables, plot data and number macros of the paper
+# Aggregate the finished projects into the paper folder (Python analysis of the CSV observations):
+#   $STORE/paper-results/        tables, plot data and number macros of the paper (its 30 projects)
+#   $STORE/paper-results-extra/  the same for the extra projects
+#   $STORE/paper-results-all/    the same for all the projects
 # bin/run.sh calls it once every project is finished; it can be called by hand at any time
 # for an overview of the projects finished so far.
 set -euo pipefail
@@ -10,36 +10,23 @@ PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PKG/config.sh"
 HCH="$STORE/src/HeuristicCompletion-History"
 
-summary() { # results directory: summary.{svg,png,md,csv,tex} of the projects in it
-  local dir="$1" name; name="$(basename "$1")"
-  echo "==> Writing the summary of $(ls -d "$dir"/*/ 2>/dev/null | wc -l | tr -d ' ') project(s) in $dir"
-  (
-    cd "$WORK"
-    printf "(CooHistoryExperimentSummary fromDirectory: '%s') exportTo: '%s'.\nSmalltalk exitSuccess.\n" "$dir" "$dir" > "summary-$name.st"
-    cp bench-base.image "summary-$name.image"; cp bench-base.changes "summary-$name.changes"
-    ./pharo "summary-$name.image" st --quit "summary-$name.st" > "$STORE/logs/summary-$name.log" 2>&1 || true
-    rm -f "summary-$name.image" "summary-$name.changes" "summary-$name.st"
-  )
-  if command -v rsvg-convert >/dev/null; then
-    rsvg-convert -b white "$dir/summary.svg" -o "$dir/summary.png" || true
-  elif command -v magick >/dev/null; then
-    magick -background white "$dir/summary.svg" "$dir/summary.png" || true
-  fi
+# The paper reads the Python analysis of the raw observations (CSV files) of its 30 projects:
+# tables, plot data, number macros. The units of a project only hold the observations of their
+# strategy, so the per-project figures of the Pharo exporters are not produced: everything comes
+# from the merged CSV files.
+analyze() { # results directory, output directory
+  local n; n="$(ls -d "$1"/*/ 2>/dev/null | wc -l | tr -d ' ')"
+  [ "$n" -gt 0 ] || return 0
+  echo "==> Analysing $n project(s) of $1 into $2"
+  rm -rf "$2"
+  python3 "$HCH/scripts/analyze_history_benchmarks.py" "$1" "$2"
 }
 
-# The paper: its 30 projects only.
-RESULTS="$STORE/results"
-summary "$RESULTS"
-
-# The extra projects alone, and all projects together (results-all links to both).
+analyze "$STORE/results" "$STORE/paper-results"            # the paper: its 30 projects
 if ls -d "$STORE/results-extra"/*/ >/dev/null 2>&1; then
-  summary "$STORE/results-extra"
+  analyze "$STORE/results-extra" "$STORE/paper-results-extra"
   rm -rf "$STORE/results-all"; mkdir -p "$STORE/results-all"
   for d in "$STORE/results"/*/ "$STORE/results-extra"/*/; do ln -s "${d%/}" "$STORE/results-all/"; done
-  summary "$STORE/results-all"
+  analyze "$STORE/results-all" "$STORE/paper-results-all"   # all the projects together
 fi
-
-# make-paper-results.sh writes next to the results directory: $STORE/paper-results
-"$HCH/scripts/make-paper-results.sh" "$RESULTS"
-[ -f "$RESULTS/summary.md" ] && cat "$RESULTS/summary.md"
 echo "Paper results: $STORE/paper-results"
