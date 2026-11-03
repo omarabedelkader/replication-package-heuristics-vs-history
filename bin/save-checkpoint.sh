@@ -14,7 +14,7 @@ else ext=gz; compress=(gzip -1); fi
 
 tmp="$STORE/checkpoints/.$p.tar.$ext.tmp"
 # package-cache only holds copies of downloaded .mcz files; the VM links are made again at restore.
-tar -C "$WORK/units" --exclude="$p/pharo-local/package-cache" -cf - "$p" | "${compress[@]}" > "$tmp"
+tar -C "$WORK/units" --exclude="$p/pharo-local/package-cache" --exclude="$p/home/hvh-store" -cf - "$p" | "${compress[@]}" > "$tmp"
 rm -f "$STORE/checkpoints/$p".tar.*
 mv "$tmp" "$STORE/checkpoints/$p.tar.$ext"
 echo "[hvh] archived $p: $(du -h "$STORE/checkpoints/$p.tar.$ext" | cut -f1)"

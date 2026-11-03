@@ -79,6 +79,7 @@ try: print(" ".join(k for k, v in json.load(sys.stdin).items() if v.get("state")
 except Exception: pass' 2>/dev/null)"
 for claim in "$STORE/claims"/*/; do
   [ -d "$claim" ] || continue
+  [ -f "$claim/done" ] && continue   # the claim of a finished unit is kept for good
   owner="$(cat "$claim/owner" 2>/dev/null)"
   job="${owner%%@*}"; where="${owner#*@}"; host="${where%%:*}"; pid="${where##*:}"
   if [ "$host" = "$(hostname)" ]; then
@@ -93,7 +94,8 @@ claim() { # name: atomically take $STORE/claims/<name>
   echo "$OWNER" > "$STORE/claims/$1/owner"
 }
 
-release() { # name: give back a claim of this worker (never another worker's)
+release() { # name: give back a claim of this worker (never another worker's, never a finished unit's)
+  [ -f "$STORE/claims/$1/done" ] && return 0
   [ "$(cat "$STORE/claims/$1/owner" 2>/dev/null)" = "$OWNER" ] && rm -rf "$STORE/claims/$1"
   return 0
 }
@@ -173,16 +175,18 @@ run_unit() { # unit
   cp "$WORK/pharo" "$dir/pharo"
   for sources in "$WORK"/*.sources; do ln -s "$sources" "$dir/"; done
 
-  log "$mode $u: $(strategy_of "$u"), slice $(slice_of "$u") (attempt $attempts)"
+  log "$mode $u: $(strategy_of "$u" | grep . || echo all strategies), slice $(slice_of "$u") (attempt $attempts)"
   echo "======== $(date '+%F %T') $mode on $(hostname) (attempt $attempts)" >> "$plog"
   (
     cd "$dir" || exit 1
+    export STORE WORK
     export TMPDIR="$dir/tmp"
     # One HOME per image: some baselines write in ~/Documents (TreeSitter clones its grammars
     # there), and images running side by side must not share it.
     mkdir -p "$dir/home"; export HOME="$dir/home"
     export PATH="$WORK/bin:$PATH"
-    export HVH_STRATEGY="$(strategy_of "$u")" HVH_SLICE="$(slice_of "$u")"
+    export HVH_SLICE="$(slice_of "$u")"
+    if [ -n "$(strategy_of "$u")" ]; then export HVH_STRATEGY="$(strategy_of "$u")"; else unset HVH_STRATEGY; fi
     export HVH_CHECKPOINT_MINUTES="$CHECKPOINT_MINUTES"
     export HVH_CHECKPOINT_REQUEST="$WORK/checkpoint-request"
     export HVH_CHECKPOINT_HOOK="'$PKG/bin/save-checkpoint.sh' '$u'"
@@ -201,6 +205,9 @@ run_unit() { # unit
     cp -R "$dir/results" "$STORE/units/$u.tmp"
     rm -rf "$STORE/units/$u"; mv "$STORE/units/$u.tmp" "$STORE/units/$u"
     touch "$STORE/state/$u.done"
+    # The claim of a finished unit is kept: on NFS, another node can still see no .done file for a
+    # few seconds (attribute cache), but mkdir always fails on an existing claim.
+    touch "$STORE/claims/$u/done"
     rm -f "$STORE/checkpoints/$u".tar.*
     rm -rf "$dir"
     log "done   $u"
@@ -247,6 +254,8 @@ while true; do
     [ "$(jobs -rp | wc -l)" -lt "$PARALLEL" ] || continue
     [ "$(free_gb)" -ge "$MIN_FREE_GB" ] || continue
     claim "$u" || continue
+    # Another worker may have finished it between the check above and the claim.
+    if unit_finished "$u"; then release "$u"; continue; fi
     run_unit "$u" &
     sleep 1
   done

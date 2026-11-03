@@ -17,7 +17,9 @@ PHARO_URL="${PHARO_URL:-https://get.pharo.org/64/140+vm}"
 #   STORE: persistent (sources, base image, checkpoints, results). Survives between jobs.
 #   WORK:  fast scratch where images run. The same absolute path on every machine, because a saved
 #          image remembers the absolute paths of its git clones.
-STORE="${STORE:-$HOME/hvh-store}"
+# The real home, not $HOME: every image has its own HOME, and the checkpoint hook runs under it.
+REAL_HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6)"; REAL_HOME="${REAL_HOME:-$HOME}"
+STORE="${STORE:-$REAL_HOME/hvh-store}"
 WORK="${WORK:-/tmp/hvh-$(id -un)}"
 
 # The 30 projects of the paper (selectors of CooHistoryExperimentConfiguration). The longest ones
@@ -55,13 +57,28 @@ slices_of() {
     *) echo 1 ;;
   esac
 }
-units_of() { # project: its units, <project>.<k> with k = slice * 8 + strategy index
-  local k n=$(( $(slices_of "$1") * ${#STRATEGIES[@]} ))
+# PAIRED=1 (default): every unit runs the eight strategies on its slice of the call sites, so the
+# strategies are compared within one image (the global fallback enumerates hash tables whose order
+# differs between images). PAIRED=0: one strategy per unit (k = slice * 8 + strategy index).
+PAIRED="${PAIRED:-1}"
+units_count() { # project: number of units
+  # Seaside starts a web server on a fixed port when it is loaded: one image per node at most.
+  if [ "$PAIRED" = 1 ] && [ "$1" = seaside ]; then echo 1; return; fi
+  echo $(( $(slices_of "$1") * ${#STRATEGIES[@]} ))
+}
+units_of() { # project: its units, <project>.<k>
+  local k n; n="$(units_count "$1")"
   for ((k = 0; k < n; k++)); do echo "$1.$k"; done
 }
 project_of() { echo "${1%.*}"; }
-strategy_of() { echo "${STRATEGIES[$(( ${1##*.} % ${#STRATEGIES[@]} ))]}"; }
-slice_of() { echo "$(( ${1##*.} / ${#STRATEGIES[@]} ))/$(slices_of "$(project_of "$1")")"; }
+strategy_of() { # empty: every strategy
+  [ "$PAIRED" = 1 ] && return 0
+  echo "${STRATEGIES[$(( ${1##*.} % ${#STRATEGIES[@]} ))]}"
+}
+slice_of() {
+  if [ "$PAIRED" = 1 ]; then echo "${1##*.}/$(units_count "$(project_of "$1")")"; return; fi
+  echo "$(( ${1##*.} / ${#STRATEGIES[@]} ))/$(slices_of "$(project_of "$1")")"
+}
 
 PARALLEL="${PARALLEL:-0}"                         # images at once on this machine; 0 = cores - 2
 MIN_FREE_GB="${MIN_FREE_GB:-24}"                  # no new image below this much free memory
