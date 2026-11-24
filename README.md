@@ -190,6 +190,48 @@ once the History after self rows are removed.
   packages). The two tables partition the call sites of `mrr.tex`; a project without such call sites
   has a row of dashes.
 
+## Project properties
+
+To relate the results to the projects, `bin/repo-features.py` measures from git, for every project,
+properties over exactly the commits it replayed, and `bin/analyze.py` (third argument, passed by
+`bin/summarize.sh`) relates them to the gains of History in two tables:
+`tables/project-features.tex` (the properties of every project, the share of its tokens found in the
+history and the gains of History) and `tables/feature-correlations.tex` (Spearman's ρ of every
+property with every gain, with Holm's correction over the properties). The paper's projects are the
+exploration set and the extra projects the confirmation set: a relation found in the first is
+believable when it holds in the second.
+
+| Property | Definition (replayed commits only) | Related work |
+|---|---|---|
+| Re-edit rate | share of the method changes of a commit (from the second one) to a method already changed earlier in the replay | changed-entity locality (Kim et al., ICSE 2007); history-based completion (Robbes and Lanza, ASE 2008); localness (Tu et al., FSE 2014) |
+| Authors, top author share | people who authored the replayed changes (merged branches included); share of the most active one | ownership (Bird et al., FSE 2011) |
+| Pull-request merges | share of replayed commits that merge a branch: a whole reviewed change per replay step | perils of mining GitHub (Kalliamvakou et al., MSR 2014) |
+| Age, replayed span | first commit of the repository to the last replayed one; time covered by the replay | |
+| Test code share | share of the method changes in test code (the rule of the test tables) | |
+| Methods per commit | median number of methods a commit changes | code churn (Nagappan and Ball, ICSE 2005) |
+| Dependencies | other projects the Metacello baseline loads | |
+| Software tool | application domain "software tools" of Borges et al. (ICSME 2016), classified from each README (`DOMAINS` in the script) | |
+
+The selection of projects follows Nagappan et al. (FSE 2013, "Diversity in software engineering
+research") and Baltes and Ralph (EMSE 2022, "Sampling in software engineering research").
+
+**How the replayed commits are found.** The benchmark replays the last first-parent commits of the
+version it loaded (a tag, a branch, or a commit no ref points to any more). The script finds that
+version as the one whose first-parent history puts every commit of the call sites at its replay
+index (for Album and PharoLauncher, the unique commit that many first-parent steps after the newest
+call-site commit); a project for which no single version fits is left out.
+
+**How the measure was checked.** Methods are compared across files and formats (a method that only
+moves to another file, folder or format, as when Glorp went from FileTree to Tonel, is not a change;
+a change of category or layout is, as for Pharo). For each project, `sites_confirmed` is the share of
+the methods whose call sites the benchmark completed that git shows changed by the same commit. On
+the run of 2026-11-02 it is at least 87% for 41 of the 51 projects (100% for TinyLogger, Seaside,
+FASTJava, Fame, ...; Microdown 99.7%, 1,990 changes against the benchmark's 1,994). It is low for
+XMLParser (23%), Glorp (30%), Grease (31%), Chanel (55%) and MoTion (58%): there the benchmark counted
+many more changes than git (Glorp: 29,865 against 6,238) because loading a commit announced methods
+that it did not change (all of Glorp when its files moved to `src/`, the same few methods at every
+commit), so their history holds methods no developer changed at that time.
+
 ## Validation
 
 TinyLogger was run twice side by side: once straight through, and once with a checkpoint every

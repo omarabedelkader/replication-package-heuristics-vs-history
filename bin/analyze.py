@@ -29,7 +29,13 @@ Writes to the output directory:
 Only the standard library is used. The statistical unit is the call site: the reciprocal ranks of a call
 site's prefixes are averaged before any paired test, since the prefixes of one call site are not independent.
 
-Usage: analyze.py RESULTS_DIR OUTPUT_DIR
+With a third argument, the properties of the projects written by bin/repo-features.py, it also writes
+  tables/project-features.tex      the properties of every project and the gains of History
+  tables/feature-correlations.tex  Spearman's rho of every property with every gain, per set of
+                                   projects (paper: exploration, extra: confirmation)
+  data/features.dat, summary-properties.json, and \\resProperty... macros
+
+Usage: analyze.py RESULTS_DIR OUTPUT_DIR [PROPERTIES_CSV]
 """
 
 import csv
@@ -851,6 +857,170 @@ def macros(summary):
     return "\n".join(definitions) + "\n"
 
 
+# ---------------------------------------------------------------- project properties (bin/repo-features.py)
+
+# (column of the properties file, label in the correlation table, header in the project table)
+PROPERTIES = [("reedit", "Re-edit rate", "Re-edit"), ("authors", "Authors", "Auth."),
+              ("top_author", "Top author share", "Top"), ("pr_merges", "Pull-request merges", "PR"),
+              ("age_years", "Age (years)", "Age"), ("span_days", "Replayed span (days)", "Span"),
+              ("test_share", "Test code share", "Test"), ("churn", "Methods per commit", "Churn"),
+              ("deps", "Dependencies", "Deps"), ("software_tool", "Software tool", "Tool")]
+SHARES = {"reedit", "top_author", "pr_merges", "test_share"}
+DOMAIN_CODES = {"Application software": "App", "System software": "Sys", "Web libraries and frameworks": "Web",
+                "Non-web libraries and frameworks": "Lib", "Software tools": "Tool", "Documentation": "Doc"}
+# the gains of History whose association with the properties is measured: (kind, other strategy)
+OUTCOMES = [("message", "Semantic"), ("message", "Dependency"), ("variable", "Semantic"), ("variable", "Dependency")]
+SET_LABELS = {"paper": "Exploration: paper projects", "extra": "Confirmation: extra projects"}
+
+
+def load_features(path):
+    """{display name: {property: float or None, "set": ..., "domain": ...}} from bin/repo-features.py."""
+    features = {}
+    with open(path, newline="") as stream:
+        for row in csv.DictReader(stream):
+            entry = {"set": row["set"], "domain": row.get("domain", ""), "project": row["project"]}
+            for key, _, _ in PROPERTIES:
+                entry[key] = float(row[key]) if row.get(key, "") != "" else None
+            features[row["name"]] = entry
+    return features
+
+
+def gain(entry, kind, other):
+    if "History" not in STRATEGIES or other not in STRATEGIES or not entry[kind]["callsites"]:
+        return None
+    return entry[kind]["mrr"]["History"] - entry[kind]["mrr"][other]
+
+
+def feature_correlations(summary, features):
+    """For each set of projects (paper: exploration, extra: confirmation) and each gain of History:
+    Spearman's rho of every property, its p-value and its Holm-adjusted p-value over the properties."""
+    result = {}
+    for setname in [s for s in SET_LABELS if any(f["set"] == s and n in summary["projects"] for n, f in features.items())]:
+        names = [n for n, f in features.items() if f["set"] == setname and n in summary["projects"]]
+        columns = {}
+        for kind, other in OUTCOMES + [("message", "in_history"), ("variable", "in_history")]:
+            cells = {}
+            for key, _, _ in PROPERTIES:
+                pairs = []
+                for n in names:
+                    entry = summary["projects"][n]
+                    y = (entry[kind]["hit_rates"]["in_history"] if entry[kind]["callsites"] else None) \
+                        if other == "in_history" else gain(entry, kind, other)
+                    if features[n][key] is not None and y is not None:
+                        pairs.append((features[n][key], y))
+                rho, p = spearman([a for a, _ in pairs], [b for _, b in pairs]) if pairs else (float("nan"), float("nan"))
+                cells[key] = {"rho": rho, "p": p, "n": len(pairs)}
+            tested = [k for k in cells if not math.isnan(cells[k]["p"])]
+            for k, adjusted in zip(tested, holm([cells[k]["p"] for k in tested])):
+                cells[k]["p_holm"] = adjusted
+            columns[f"{kind}-{other}"] = cells
+        result[setname] = {"projects": len(names), "columns": columns}
+    return result
+
+
+def table_project_features(summary, features):
+    n = len(PROPERTIES) - 1  # the software-tool flag is shown by the domain column
+    lines = ["\\begin{tabular}{ll" + "r" * n + SEPARATOR + "rrr" + SEPARATOR + "rrr}", "\\toprule",
+             f"& & \\multicolumn{{{n}}}{{c{SEPARATOR}}}{{Measured from git over the replayed commits}}"
+             f" & \\multicolumn{{3}}{{c{SEPARATOR}}}{{Message completion}} & \\multicolumn{{3}}{{c}}{{Class-name completion}}\\\\",
+             "Project & Dom. & " + " & ".join(h for k, _, h in PROPERTIES if k != "software_tool")
+             + " & In hist. & H$-$S & H$-$D & In hist. & H$-$S & H$-$D\\\\", "\\midrule"]
+    for setname in SET_LABELS:
+        rows = [(n, f) for n, f in sorted(features.items(), key=lambda item: item[0].lower())
+                if f["set"] == setname and n in summary["projects"]]
+        if not rows:
+            continue
+        if any(f["set"] != setname for n, f in features.items() if n in summary["projects"]):
+            lines.append(f"\\multicolumn{{{n + 8}}}{{l}}{{\\textit{{{SET_LABELS[setname]}}}}}\\\\")
+        for name, f in rows:
+            entry = summary["projects"][name]
+            cells = [DOMAIN_CODES.get(f["domain"], "--")]
+            for key, _, _ in PROPERTIES:
+                if key == "software_tool":
+                    continue
+                value = f[key]
+                cells.append("--" if value is None else percent(value) if key in SHARES
+                             else f"{value:.1f}" if key == "age_years" else f"{value:,.0f}")
+            for kind in ("message", "variable"):
+                e = entry[kind]
+                cells.append(percent(e["hit_rates"]["in_history"]) if e["callsites"] else "--")
+                for other in ("Semantic", "Dependency"):
+                    g = gain(entry, kind, other)
+                    cells.append("--" if g is None else signed(f"{g:+.3f}"))
+            lines.append(latex_name(name) + " & " + " & ".join(cells) + "\\\\")
+    lines += ["\\bottomrule", "\\end{tabular}"]
+    return "\n".join(lines) + "\n"
+
+
+def table_feature_correlations(correlations_by_set):
+    sets = list(correlations_by_set)
+    width = len(OUTCOMES)
+    spec = "l" + (SEPARATOR.join(["r" * width] * len(sets)))
+    lines = ["\\begin{tabular}{" + spec + "}", "\\toprule",
+             "& " + " & ".join(f"\\multicolumn{{{width}}}{{c{SEPARATOR if k < len(sets) - 1 else ''}}}"
+                              f"{{{SET_LABELS[s]} ({correlations_by_set[s]['projects']})}}" for k, s in enumerate(sets)) + "\\\\",
+             "& " + " & ".join(f"\\multicolumn{{2}}{{c}}{{Message}} & \\multicolumn{{2}}{{c{SEPARATOR if k < len(sets) - 1 else ''}}}{{Class name}}"
+                              for k, _ in enumerate(sets)) + "\\\\",
+             "Property & " + " & ".join(" & ".join(f"H$-${SHORT[o]}" for _, o in OUTCOMES) for _ in sets) + "\\\\",
+             "\\midrule"]
+
+    def cell(c):
+        if math.isnan(c["rho"]):
+            return "--"
+        marker = "$^{\\dagger}$" if c.get("p_holm", 1) < 0.05 else "$^{*}$" if c["p"] < 0.05 else ""
+        return signed(f"{c['rho']:+.2f}") + marker
+
+    for key, label, _ in PROPERTIES:
+        row = [cell(correlations_by_set[s]["columns"][f"{kind}-{other}"][key]) for s in sets for kind, other in OUTCOMES]
+        lines.append(f"{label} & " + " & ".join(row) + "\\\\")
+    # (a short title: a multicolumn cell wider than its columns would widen the last column)
+    lines += ["\\midrule", "\\multicolumn{" + str(1 + width * len(sets)) + "}{l}{\\textit{Against the share of"
+              " tokens in the history (measured)}}\\\\"]
+    for key, label, _ in PROPERTIES:
+        row = []
+        for s in sets:
+            for kind, _ in OUTCOMES:
+                row.append(cell(correlations_by_set[s]["columns"][f"{kind}-in_history"][key]))
+        # one value per kind: shown under H-S, blank under H-D
+        shown = [c if k % 2 == 0 else "" for k, c in enumerate(row)]
+        lines.append(f"\\quad {label} & " + " & ".join(shown) + "\\\\")
+    lines += ["\\bottomrule", "\\end{tabular}"]
+    return "\n".join(lines) + "\n"
+
+
+def data_features(summary, features):
+    header = ["project", "set"] + [k for k, _, _ in PROPERTIES] + ["inhistMsg", "HminusSMsg", "HminusDMsg",
+                                                                   "inhistVar", "HminusSVar", "HminusDVar"]
+    lines = [" ".join(header)]
+    for name, f in sorted(features.items(), key=lambda item: item[0].lower()):
+        if name not in summary["projects"]:
+            continue
+        entry = summary["projects"][name]
+        values = [f["project"], f["set"]] + ["nan" if f[k] is None else f"{f[k]:.4f}" for k, _, _ in PROPERTIES]
+        for kind in ("message", "variable"):
+            values.append(f"{entry[kind]['hit_rates']['in_history']:.4f}" if entry[kind]["callsites"] else "nan")
+            for other in ("Semantic", "Dependency"):
+                g = gain(entry, kind, other)
+                values.append("nan" if g is None else f"{g:.4f}")
+        lines.append(" ".join(values))
+    return "\n".join(lines) + "\n"
+
+
+def feature_macros(correlations_by_set):
+    """\\resProperty<Set><Property><Kind><Outcome>: Spearman's rho (e.g. \\resPropertyPaperReeditMessageHS)."""
+    definitions = []
+    for setname, data in correlations_by_set.items():
+        definitions.append(f"\\newcommand{{{macro_name('Property', setname, 'Projects')}}}{{{data['projects']}}}")
+        for column, cells in data["columns"].items():
+            kind, other = column.split("-")
+            code = "InHistory" if other == "in_history" else "H" + SHORT[other]
+            for key, value in cells.items():
+                name = macro_name("Property", setname, key.replace("_", " "), kind, code)
+                definitions.append(f"\\newcommand{{{name}}}{{{fmt(value['rho'], 2)}}}")
+                definitions.append(f"\\newcommand{{{name + 'P'}}}{{{p_label(value['p'])}}}")
+    return "\n".join(definitions) + "\n"
+
+
 def variants():
     """(file suffix, macro word, cutoff, scope) of every variant of the main analysis:
     mrr-top5.tex / \\resTopFive..., mrr-test.tex / \\resTest..., mrr-nontest.tex / \\resNonTest..."""
@@ -897,9 +1067,10 @@ def variant_macros(variant, word, everything):
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         sys.exit(__doc__)
     results, output = sys.argv[1], sys.argv[2]
+    features = load_features(sys.argv[3]) if len(sys.argv) == 4 and os.path.isfile(sys.argv[3]) else None
     projects = {}
     missing = []
     for folder in sorted(os.listdir(results)):
@@ -950,6 +1121,22 @@ def main():
         print(f"{file_suffix}: " + ", ".join(f"{kind} {variant['pooled'][kind]['callsites']} call sites, MRR@{cutoff} "
                                              + " ".join(f"{SHORT[s]}={variant['pooled'][kind]['mrr'][s]:.3f}" for s in STRATEGIES)
                                              for kind in KINDS))
+    if features:
+        # The properties of the projects (bin/repo-features.py) against the gains of History.
+        known = [n for n in summary["projects"] if n in features]
+        print(f"properties: {len(known)} of {len(summary['projects'])} projects"
+              + (f" (none for {', '.join(sorted(set(summary['projects']) - set(known)))})" if len(known) < len(summary["projects"]) else ""))
+        if known:
+            correlations_by_set = feature_correlations(summary, features)
+            write(os.path.join(output, "summary-properties.json"), json.dumps(correlations_by_set, indent=1, default=str))
+            write(os.path.join(output, "tables", "project-features.tex"), table_project_features(summary, features))
+            write(os.path.join(output, "tables", "feature-correlations.tex"), table_feature_correlations(correlations_by_set))
+            write(os.path.join(output, "data", "features.dat"), data_features(summary, features))
+            definitions += feature_macros(correlations_by_set)
+            for setname, data in correlations_by_set.items():
+                cells = data["columns"]["message-Semantic"]
+                print(f"  {setname} ({data['projects']} projects), rho with message H-S: "
+                      + "  ".join(f"{k}={cells[k]['rho']:+.2f}" for k, _, _ in PROPERTIES if not math.isnan(cells[k]["rho"])))
     write(os.path.join(output, "results-macros.tex"), definitions)
 
     for kind in KINDS:

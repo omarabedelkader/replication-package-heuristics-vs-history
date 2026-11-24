@@ -15,12 +15,22 @@ source "$PKG/config.sh"
 # from the merged CSV files. The analysis is bin/analyze.py: the benchmark's own script
 # (scripts/analyze_history_benchmarks.py @ HCH_COMMIT) without History after self, plus the same
 # MRR table with five candidates and for the call sites in test code and in the rest of the code.
+# The properties of the projects, measured from git over the commits each one replayed
+# (bin/repo-features.py: it clones every repository once into $STORE/repo-clones). Computed once;
+# delete $STORE/repo-features.csv to compute them again. Without them (no network, for example),
+# only the two tables of the properties are missing.
+FEATURES="$STORE/repo-features.csv"
+if [ ! -f "$FEATURES" ]; then
+  echo "==> Measuring the properties of the projects into $FEATURES"
+  python3 "$PKG/bin/repo-features.py" "$STORE" "$FEATURES" || { echo "    (failed: no property tables)"; rm -f "$FEATURES"; }
+fi
+
 analyze() { # results directory, output directory
   local n; n="$(ls -d "$1"/*/ 2>/dev/null | wc -l | tr -d ' ')"
   [ "$n" -gt 0 ] || return 0
   echo "==> Analysing $n project(s) of $1 into $2"
   rm -rf "$2"
-  python3 "$PKG/bin/analyze.py" "$1" "$2"
+  python3 "$PKG/bin/analyze.py" "$1" "$2" "$FEATURES"
 }
 
 analyze "$STORE/results" "$STORE/paper-results"            # the paper: its 30 projects
