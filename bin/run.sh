@@ -72,11 +72,19 @@ for tool in git gcc cc make curl wget unzip tar; do
 done
 
 # Release the claims of workers that are gone: a worker of this machine whose process ended, or a
-# worker of an OAR job that is not running any more. Without an answer from oarstat, the claims of
-# other machines are kept.
+# worker of an OAR job that is not running any more. The running jobs come from oarstat or, on the
+# sites whose nodes have no oarstat (Nantes), from the Grid'5000 API. Without an answer, the claims
+# of other machines are kept.
 running_jobs="$(oarstat -u -J 2>/dev/null | python3 -c 'import json, sys
 try: print(" ".join(k for k, v in json.load(sys.stdin).items() if v.get("state") == "Running"))
 except Exception: pass' 2>/dev/null)"
+site="$(hostname -f 2>/dev/null | sed -n 's/^[^.]*\.\([^.]*\)\.grid5000\.fr$/\1/p')"
+if [ -z "$running_jobs" ] && [ -n "$site" ]; then
+  running_jobs="$(curl -s -m 30 "https://api.grid5000.fr/stable/sites/$site/jobs?user=$(id -un)&state=running" \
+    2>/dev/null | python3 -c 'import json, sys
+try: print(" ".join(str(j["uid"]) for j in json.load(sys.stdin)["items"] if j.get("state") == "running"))
+except Exception: pass' 2>/dev/null)"
+fi
 for claim in "$STORE/claims"/*/; do
   [ -d "$claim" ] || continue
   [ -f "$claim/done" ] && continue   # the claim of a finished unit is kept for good
@@ -109,13 +117,16 @@ decompress() { # archive
   esac
 }
 
+# (grep reads all its input: `grep -q` would stop at the first match, awk would then die of SIGPIPE
+# and, with pipefail, a long log would answer "no".)
 snapshot_crashed() { # log: did the last attempt die inside a snapshot?
   awk '/^======== /{seg=""} {seg=seg $0 "\n"} END{printf "%s", seg}' "$1" \
-    | grep -aq 'SnapshotOperation>>performSnapshot'
+    | grep -a 'SnapshotOperation>>performSnapshot' > /dev/null
 }
 
 started_replay() { # log: did the last attempt replay at least one commit?
-  awk '/^======== /{seg=""} {seg=seg $0 "\n"} END{printf "%s", seg}' "$1" | grep -aq '\[hvh .*Commit [0-9]*/'
+  awk '/^======== /{seg=""} {seg=seg $0 "\n"} END{printf "%s", seg}' "$1" \
+    | grep -a '\[hvh .*Commit [0-9]*/' > /dev/null
 }
 
 free_gb() { awk '/MemAvailable/ {print int($2 / 1048576)}' /proc/meminfo 2>/dev/null || echo 999; }

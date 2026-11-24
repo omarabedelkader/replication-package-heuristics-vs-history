@@ -45,11 +45,13 @@ for node in "${NODES_OF_JOB[@]}"; do
   fi
   pids+=($!)
 done
-# `wait` returns early when a signal is trapped: wait again until every worker really ends.
+# `wait` returns early when a signal is trapped: wait again until every worker really ends. (Not
+# `kill -0 <pid>`: a remote worker's pid is that of oarsh, which runs as another user, so kill -0
+# says it is gone and the job would end, killing the other nodes, as soon as this node's worker ends.)
+while [ -n "$(jobs -rp)" ]; do wait; done
 status=0
 for pid in "${pids[@]}"; do
-  s=0
-  while kill -0 "$pid" 2>/dev/null; do wait "$pid"; s=$?; done
-  [ "$s" -eq 0 ] || status=$s
+  wait "$pid" 2>/dev/null; s=$?   # 127: already collected by the loop above
+  [ "$s" -eq 0 ] || [ "$s" -eq 127 ] || status=$s
 done
 exit "$status"

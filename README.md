@@ -2,7 +2,7 @@
 
 This package reruns, from scratch, the History experiment of
 [HeuristicCompletion-History](https://github.com/omarabedelkader/HeuristicCompletion-History)
-(branch `better`) on its 30 Pharo projects. It produces the per-project results, the summary and
+(branch `better`) on 29 of its 30 Pharo projects (Druid is left out: see `config.sh`). It produces the per-project results, the summary and
 the `paper-results/` folder the paper reads.
 
 It is built for long runs on shared clusters (Grid'5000):
@@ -24,22 +24,22 @@ It is built for long runs on shared clusters (Grid'5000):
 All of these are set in `config.sh`. `HCH_COMMIT=latest` follows the tip of `better` instead.
 Every repository is cloned over HTTPS, so no SSH key is needed.
 
-The 30 studied projects are loaded from their branches and replayed over their last 200
+The 29 studied projects are loaded from their branches and replayed over their last 200
 first-parent commits, exactly as the benchmark defines them. Running the package later
 therefore replays more recent histories.
 
 ### Extra projects
 
-To use the nodes fully, the package also defines 23 **extra projects**, which are not in the paper:
-Soil, Molecule, Pyramid, Telescope, XMLParser, MaterialDesignLite, Cormas, MuTalk, Coypu,
+To use the nodes fully, the package also defines 22 **extra projects**, which are not in the paper:
+Soil, Molecule, Pyramid, Telescope, XMLParser, MaterialDesignLite, MuTalk, Coypu,
 PharoLanguageServer, FAST, MoTion, AIGraphAlgorithms, PetitParser2, TaskIt, P3, OpenAPI, MongoTalk, Grease, Parasol, NeoCSV, NeoJSON and ReStore (`config.sh` lists the projects
 that were tried and left out, and why). They are defined in
 `pharo/src/HVH-Replication/CooHistoryExperimentConfiguration.extension.st` in the same way as the
 paper's projects: last 200 first-parent commits of the branch that is loaded.
 
 Their results go to `STORE/results-extra/` and `STORE/paper-results-extra/`, and
-`STORE/paper-results-all/` covers all 53 projects. `paper-results/` still covers only the paper's 30. `EXTRA=0` runs only
-the 30 (`EXTRA=0 g5k/submit.sh`).
+`STORE/paper-results-all/` covers all 51 projects. `paper-results/` still covers only the paper's 29. `EXTRA=0` runs only
+the 29 (`EXTRA=0 g5k/submit.sh`).
 
 ## Quick start on Grid'5000 (Rennes)
 
@@ -149,7 +149,7 @@ pharo/src/HVH-Replication   the additions (Tonel package)
 ## Running elsewhere (any Linux or macOS machine)
 
 ```bash
-bin/run.sh                      # all 30 projects (PARALLEL=8 bin/run.sh to limit)
+bin/run.sh                      # all 29 projects (PARALLEL=8 bin/run.sh to limit)
 bin/run.sh microdown roassal    # some of them
 ```
 
@@ -162,7 +162,7 @@ a crash loses at most the last 30 minutes of each project: run `bin/run.sh` agai
   the STON statistics of each project (`STORE/results-extra/` for the extra projects)
 - `STORE/units/<unit>/`: the raw results of each unit
 - `STORE/paper-results/`: `results-macros.tex`, `tables/*.tex`, `data/*.dat` and `summary*.json`
-  for the paper's 30 projects; `paper-results-extra/` and `paper-results-all/` likewise
+  for the paper's 29 projects; `paper-results-extra/` and `paper-results-all/` likewise
 - `STORE/logs/<unit>.log`: one log per unit, with every attempt appended
 
 ## Analysis

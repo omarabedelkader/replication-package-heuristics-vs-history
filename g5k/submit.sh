@@ -14,7 +14,7 @@
 #               reservations per user and site): g5k/job.sh starts one worker per node; they share
 #               the units. If the HOSTS nodes are not all free, fewer are tried, down to MIN_HOSTS
 #               (default 1).
-#   EXTRA       1 (default): the paper's 30 projects and the 24 extra ones; 0: the 30 only
+#   EXTRA       1 (default): the paper's 29 projects and the 22 extra ones; 0: the 29 only
 #   WALLTIME    default 14:00:00
 #   NODES       candidate "queue:cluster" pairs, tried in this order until one is accepted.
 #               Default (Rennes): default:paradoxe  2 x Xeon Gold 5320, 52 cores, 384 GiB, no GPU.

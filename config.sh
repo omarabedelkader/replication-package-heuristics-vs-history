@@ -22,19 +22,22 @@ REAL_HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6 || true)"; REAL
 STORE="${STORE:-$REAL_HOME/hvh-store}"
 WORK="${WORK:-/tmp/hvh-$(id -un)}"
 
-# The 30 projects of the paper (selectors of CooHistoryExperimentConfiguration). The longest ones
+# The 29 projects of the paper (selectors of CooHistoryExperimentConfiguration). The longest ones
 # come first, so they start first when PARALLEL is smaller than the number of projects.
-PAPER_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJava druid album bloc
+# Left out of the benchmark's 30: druid (the benchmark's CoTypeInferencer fails on it in the middle
+# of the replay, #lookupSelector: sent to nil, in every run so far: 2026-11-02 and 2026-11-24).
+PAPER_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJava album bloc
   polyMath gitProjectHealth mooseIDE chanel famix pharoLauncher treeSitter osSubprocess microdown
   dataFrame alexandrie voyage pillar fame teapot seaside mooseCI tinyLogger roassal moose)
 
-# 23 extra projects, defined by the package (pharo/src/HVH-Replication/
+# 22 extra projects, defined by the package (pharo/src/HVH-Replication/
 # CooHistoryExperimentConfiguration.extension.st), to fill a big node. Their results go to
-# $STORE/results-extra and never into the paper results. EXTRA=0 runs the paper's 30 only.
+# $STORE/results-extra and never into the paper results. EXTRA=0 runs the paper's 29 only.
 # Tried and left out: kendrick (its baseline does not load in Pharo 14: "Conflicting repositories"),
 # willow, buoy, stargate (ba-st baselines that do not load in Pharo 14), mapless (the benchmark's
-# CoTypeInferencer fails on it: #lookupSelector: sent to nil), codeParadise (one image takes 48 GB).
-EXTRA_PROJECTS=(soil molecule pyramid telescope xmlParser materialDesignLite cormas muTalk coypu
+# CoTypeInferencer fails on it: #lookupSelector: sent to nil), cormas (the same failure, at commit
+# 91, in every run so far), codeParadise (one image takes 48 GB).
+EXTRA_PROJECTS=(soil molecule pyramid telescope xmlParser materialDesignLite muTalk coypu
   pharoLanguageServer fast moTion aiGraphAlgorithms petitParser2 taskIt p3 openAPI
   mongoTalk grease parasol neoCSV neoJSON reStore)
 
