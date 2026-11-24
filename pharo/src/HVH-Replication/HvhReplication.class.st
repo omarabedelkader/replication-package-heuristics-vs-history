@@ -4,7 +4,9 @@ they only:
   1. clone every repository over HTTPS, so no SSH key is needed on the compute nodes;
   2. save the image between two commits of the replay (a checkpoint). A job that hits its walltime
      is continued by reopening that image: the replay process carries on at the next commit, with
-     the same session, history snapshot, statistics and benchmarks.
+     the same session, history snapshot, statistics and benchmarks;
+  3. leave out the History after self configuration (CooHistoryExperimentRunner>>#benchmarksForSession:).
+     The other configurations do not depend on it: each completes the call sites on its own.
 
 Environment variables, read at every commit:
   HVH_CHECKPOINT_MINUTES  minutes between two checkpoints (default 30)
@@ -103,9 +105,12 @@ HvhReplication class >> restoreSessionHandlers: triples [
 { #category : 'units' }
 HvhReplication class >> benches: aStrategyName id: aCallsiteId [
 	"Does this image complete the call site aCallsiteId (CooCallsiteLog>>#idFor:target:) with the
-	strategy aStrategyName? The other call sites are left to the other units of the project."
+	strategy aStrategyName? The other call sites are left to the other units of the project.
+	History after self is not run any more (see CooHistoryExperimentRunner>>#benchmarksForSession:);
+	an image resumed from a checkpoint saved before still holds its benchmarks, which complete nothing."
 
 	| unit |
+	aStrategyName asString = 'HistoryAfterSelf' ifTrue: [ ^ false ].
 	unit := self unit.
 	(unit first isNil or: [ unit first = aStrategyName asString ]) ifFalse: [ ^ false ].
 	^ (self stableHashOf: aCallsiteId) \\ unit third = unit second

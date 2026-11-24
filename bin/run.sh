@@ -247,7 +247,7 @@ log "worker $OWNER on $(hostname): ${#todo[@]} unit(s) of ${#PROJECTS[@]} projec
 
 while true; do
   waiting=0
-  for u in "${todo[@]}"; do
+  for u in ${todo[@]+"${todo[@]}"}; do   # (an empty array is "unbound" for set -u in bash 3)
     unit_finished "$u" && continue
     [ -d "$STORE/claims/$u" ] && continue
     waiting=$((waiting + 1))
@@ -260,7 +260,7 @@ while true; do
     sleep 1
   done
   # Nothing left to claim and nothing running here: this worker is done.
-  if [ "$waiting" = 0 ] && [ "$(jobs -rp | wc -l)" = 0 ]; then break; fi
+  if [ "$waiting" = 0 ] && [ "$(jobs -rp | wc -l)" -eq 0 ]; then break; fi
   sleep 15
 done
 wait

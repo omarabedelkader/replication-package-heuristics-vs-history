@@ -8,18 +8,19 @@
 set -euo pipefail
 PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PKG/config.sh"
-HCH="$STORE/src/HeuristicCompletion-History"
 
 # The paper reads the Python analysis of the raw observations (CSV files) of its 30 projects:
 # tables, plot data, number macros. The units of a project only hold the observations of their
 # strategy, so the per-project figures of the Pharo exporters are not produced: everything comes
-# from the merged CSV files.
+# from the merged CSV files. The analysis is bin/analyze.py: the benchmark's own script
+# (scripts/analyze_history_benchmarks.py @ HCH_COMMIT) without History after self, plus the same
+# MRR table with five candidates and for the call sites in test code and in the rest of the code.
 analyze() { # results directory, output directory
   local n; n="$(ls -d "$1"/*/ 2>/dev/null | wc -l | tr -d ' ')"
   [ "$n" -gt 0 ] || return 0
   echo "==> Analysing $n project(s) of $1 into $2"
   rm -rf "$2"
-  python3 "$HCH/scripts/analyze_history_benchmarks.py" "$1" "$2"
+  python3 "$PKG/bin/analyze.py" "$1" "$2"
 }
 
 analyze "$STORE/results" "$STORE/paper-results"            # the paper: its 30 projects

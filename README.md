@@ -7,9 +7,9 @@ the `paper-results/` folder the paper reads.
 
 It is built for long runs on shared clusters (Grid'5000):
 
-- every project is split into **units** that run in parallel, on one or several nodes: one unit
-  per strategy (8) and per slice of the call sites, so that even the projects whose single commits
-  take hours finish in one night;
+- every project is split into **units** that run in parallel, on one or several nodes: 8 units
+  per slice of the call sites, so that even the projects whose single commits take hours finish in
+  one night;
 - every image saves a **checkpoint** between two commits of the replay. When a job hits its
   walltime, you submit the job again and every unit goes on from its last checkpoint.
 
@@ -83,6 +83,7 @@ bin/merge-units.py    joins the units of a project into its results
 bin/save-checkpoint.sh  called by an image after it saved itself: archives its directory
 bin/status.sh         per project: units done / running / failed, least advanced running unit
 bin/summarize.sh      paper-results (Python analysis of the CSV observations)
+bin/analyze.py        that analysis (see Analysis below)
 g5k/submit.sh         OAR reservation (19:00, 14 h, CPU-only node, fallbacks)
 g5k/job.sh            the OAR job: checkpoint signal, one bin/run.sh worker
 pharo/install.st      loads the benchmark (group Bench) + the additions into Pharo 14
@@ -93,10 +94,13 @@ pharo/src/HVH-Replication   the additions (Tonel package)
 - **Units.** Each completion is independent of the others: a strategy answers a call site from
   the image and the history of the previous commits, and no strategy changes either. A unit
   therefore loads the project and replays every commit with the full history, exactly like a
-  whole run, but completes only the call sites of its strategy (`HVH_STRATEGY`) and slice
-  (`HVH_SLICE`, a stable hash of the call site id modulo the number of slices; `config.sh` gives
-  8 slices to toplo, fastPython and glorp, 4 to druid and fastTypescript, 2 to 8 others, 1 to the
-  rest). `bin/merge-units.py` concatenates the units' `ranks.csv` rows (each row comes from one
+  whole run, but completes only the call sites of its share (`HVH_SLICE`, a stable hash of the
+  call site id modulo the number of units of the project), with every strategy (`PAIRED=1`, the
+  default) or with one (`PAIRED=0`, `HVH_STRATEGY`). A project has `UNITS_PER_SLICE` (8) units per
+  slice; `config.sh` gives 8 slices to toplo, fastPython and glorp, 4 to druid and fastTypescript,
+  2 to 8 others, 1 to the rest. `UNITS_PER_SLICE` stays at 8 although 7 configurations are run
+  now: the share of a unit depends on it, so a different value would give the units already done,
+  claimed or checkpointed in `STORE` other call sites. `bin/merge-units.py` concatenates the units' `ranks.csv` rows (each row comes from one
   unit) and takes the union of their `callsites.csv` rows. The project statistics of the STON
   file are the same in every unit: they are counted before a call site is left to another unit.
   Units are claimed by creating `STORE/claims/<unit>` (atomic on NFS), so any number of workers,
@@ -130,8 +134,17 @@ pharo/src/HVH-Replication   the additions (Tonel package)
   reloads `HVH-Replication` from the package (`pharo/update.st`), so a checkpoint saved by an older
   version of the additions runs the current one.
 - **The additions change nothing that is measured.** `HVH-Replication` only clones over HTTPS,
-  closes and reopens the two CSV logs around a snapshot, and adds the checkpoint call (plus a
-  progress line) at the end of `CooHistoryExperimentRunner>>replayCommits:session:benchmarks:`.
+  closes and reopens the two CSV logs around a snapshot, adds the checkpoint call (plus a
+  progress line) at the end of `CooHistoryExperimentRunner>>replayCommits:session:benchmarks:`,
+  and leaves out one configuration (below).
+- **History after self is not run.** `HVH-Replication` overrides
+  `CooHistoryExperimentRunner>>benchmarksForSession:` without it, so the images run 7
+  configurations: Baseline, Semantic, History, Dependency, Hybrid, Hybrid H→D and Hybrid D→H.
+  The others do not depend on it (each completes the call sites on its own). An image resumed
+  from a checkpoint saved before this change goes on with the benchmarks it had built, so
+  `HvhReplication class>>benches:id:`, which every completion goes through, also refuses it:
+  from its next commit on, that image completes nothing with it. Rows written before stay in the
+  CSV files and are ignored by the analysis.
 
 ## Running elsewhere (any Linux or macOS machine)
 
@@ -148,9 +161,34 @@ a crash loses at most the last 30 minutes of each project: run `bin/run.sh` agai
 - `STORE/results/<project>/`: the merged CSV observations (`*-callsites.csv`, `*-ranks.csv`) and
   the STON statistics of each project (`STORE/results-extra/` for the extra projects)
 - `STORE/units/<unit>/`: the raw results of each unit
-- `STORE/paper-results/`: `results-macros.tex`, `tables/*.tex`, `data/*.dat` and `summary.json`
+- `STORE/paper-results/`: `results-macros.tex`, `tables/*.tex`, `data/*.dat` and `summary*.json`
   for the paper's 30 projects; `paper-results-extra/` and `paper-results-all/` likewise
 - `STORE/logs/<unit>.log`: one log per unit, with every attempt appended
+
+## Analysis
+
+`bin/summarize.sh` runs `bin/analyze.py`, the benchmark's own analysis
+(`scripts/analyze_history_benchmarks.py` @ `55032e8`) with three changes. Every number they share is
+computed in the same way: on the same data, its outputs are byte-identical to the pinned script's
+once the History after self rows are removed.
+
+- **History after self is not reported.** It is no longer run (see How it works); the rows of
+  results made before are ignored when the ranks are read, and it appears in no table, plot data
+  or macro.
+- **Five candidates** (`tables/mrr-top5.tex`, `summary-top5.json`, `\resTopFive...` macros): the
+  table of `mrr.tex` when the engine shows five candidates instead of ten. The benchmark logs the rank
+  of the expected token in the first ten proposals of one ordered list (`completion first: 10`); the
+  first five of that list are what `completion first: 5` answers, so a token ranked 6 to 10 counts as
+  absent and no new run is needed. Hit@10 and the completion times (measured for ten candidates) are
+  left out. `CUTOFFS` in `bin/analyze.py` sets the lengths analysed.
+- **Test and non-test code** (`tables/mrr-test.tex`, `tables/mrr-nontest.tex`, `summary-test.json`,
+  `summary-nontest.json`, `\resTest...` and `\resNonTest...` macros): the table of `mrr.tex` over the
+  call sites in test code and over the others. A call site is in test code when its method is in a test
+  package (a name segment `Tests` or `Test`, or ending with `Tests`, or `Test` followed by a capital or
+  a digit, such as `Bloc-UnitedTests` or `Famix-Test1-Entities`, but not `Microdown-BookTester`) or in
+  a class named `*Test`, `*Tests` or `*TestCase` (the tests that Druid and OpenPonk keep in their main
+  packages). The two tables partition the call sites of `mrr.tex`; a project without such call sites
+  has a row of dashes.
 
 ## Validation
 
@@ -171,3 +209,11 @@ are identical and every strategy's MRR is within 0.005 of the unsplit run's. Two
 at different times that evening (the node half loaded, then fully loaded) agree on only 92.4% of
 the ranks (message Baseline MRR 0.211 vs 0.223): the benchmark varies more with the machine's load
 than with the split.
+
+**History after self removed (2026-11-24).** TinyLogger was run in its 8 units, first with the
+previous version of the package (which ran History after self): 4 units finished, 2 were killed by
+`kill -9` after a checkpoint (after commits 7 and 3). The run was then finished with this version:
+the 2 checkpointed units resumed with the benchmarks of the previous version and the 2 others
+started fresh. The units started fresh have no History after self row; the resumed units have none
+after their checkpoint commit; every call site of the merged results (1,056) has the 7
+configurations at the same prefixes, and `bin/summarize.sh` reports exactly these 7.

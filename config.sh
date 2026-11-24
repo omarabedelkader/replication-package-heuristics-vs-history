@@ -18,7 +18,7 @@ PHARO_URL="${PHARO_URL:-https://get.pharo.org/64/140+vm}"
 #   WORK:  fast scratch where images run. The same absolute path on every machine, because a saved
 #          image remembers the absolute paths of its git clones.
 # The real home, not $HOME: every image has its own HOME, and the checkpoint hook runs under it.
-REAL_HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6)"; REAL_HOME="${REAL_HOME:-$HOME}"
+REAL_HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6 || true)"; REAL_HOME="${REAL_HOME:-$HOME}"
 STORE="${STORE:-$REAL_HOME/hvh-store}"
 WORK="${WORK:-/tmp/hvh-$(id -un)}"
 
@@ -45,10 +45,15 @@ is_extra() { local e; for e in "${EXTRA_PROJECTS[@]}"; do [ "$e" = "$1" ] && ret
 results_of() { if is_extra "$1"; then echo "$STORE/results-extra/$1"; else echo "$STORE/results/$1"; fi; }
 
 # Every project is split into units that run in parallel images, on one or several machines:
-# one unit per strategy (8) and per slice of the call sites. A unit replays every commit with the
-# same history, but completes only the call sites of its strategy and slice (bin/merge-units.py
-# joins the units of a project). The projects whose single commits take hours get more slices.
-STRATEGIES=(Baseline Semantic History Dependency HistoryAfterSelf Hybrid HybridHD HybridDH)
+# UNITS_PER_SLICE units per slice of the call sites. A unit replays every commit with the same
+# history, but completes only the call sites of its share (bin/merge-units.py joins the units of a
+# project). The projects whose single commits take hours get more slices.
+# The configurations the benchmark runs (History after self is left out, see pharo/src/HVH-Replication).
+STRATEGIES=(Baseline Semantic History Dependency Hybrid HybridHD HybridDH)
+# Units per slice when PAIRED=1. Kept at 8 (the number of configurations when the replication
+# started): a unit <project>.<k> covers the share k of the call sites, so changing it would give the
+# units, claims, checkpoints and finished results in $STORE other call sites.
+UNITS_PER_SLICE=8
 slices_of() {
   case "$1" in
     toplo|fastPython|glorp) echo 8 ;;
@@ -57,13 +62,15 @@ slices_of() {
     *) echo 1 ;;
   esac
 }
-# PAIRED=1 (default): every unit runs the eight strategies on its slice of the call sites, so the
-# strategies are compared within one image (the global fallback enumerates hash tables whose order
-# differs between images). PAIRED=0: one strategy per unit (k = slice * 8 + strategy index).
+# PAIRED=1 (default): every unit runs every strategy on its share of the call sites (k of
+# slices * UNITS_PER_SLICE), so the strategies are compared within one image (the global fallback
+# enumerates hash tables whose order differs between images). PAIRED=0: one strategy per unit
+# (k = slice * number of strategies + strategy index).
 PAIRED="${PAIRED:-1}"
 units_count() { # project: number of units
   # Seaside starts a web server on a fixed port when it is loaded: one image per node at most.
   if [ "$PAIRED" = 1 ] && [ "$1" = seaside ]; then echo 1; return; fi
+  if [ "$PAIRED" = 1 ]; then echo $(( $(slices_of "$1") * UNITS_PER_SLICE )); return; fi
   echo $(( $(slices_of "$1") * ${#STRATEGIES[@]} ))
 }
 units_of() { # project: its units, <project>.<k>
