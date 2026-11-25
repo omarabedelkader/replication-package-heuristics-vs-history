@@ -549,6 +549,11 @@ def table_mrr(summary, kind):
     return "\n".join(lines) + "\n"
 
 
+def reference_code(strategy):
+    """The code of a configuration in a table header; Semantic, the reference of the superscripts, underlined."""
+    return f"\\underline{{{SHORT[strategy]}}}" if strategy == "Semantic" else SHORT[strategy]
+
+
 def table_mrr_both(summary, part="main"):
     """Message and class-name MRR@10 per project, side by side. Next to every value, a small superscript
     gives its change relative to Semantic in percent, in green or red (\\dif, \\up, \\down)."""
@@ -557,7 +562,7 @@ def table_mrr_both(summary, part="main"):
     separator = SEPARATOR
     # multicolumn cells drop the separator of the column spec, so the last cell of the message half repeats it
     code_cells = lambda last_sep: " & ".join(
-        f"\\multicolumn{{2}}{{c{separator if last_sep and k == n - 1 else ''}}}{{{SHORT[st]}}}" for k, st in enumerate(STRATEGIES))
+        f"\\multicolumn{{2}}{{c{separator if last_sep and k == n - 1 else ''}}}{{{reference_code(st)}}}" for k, st in enumerate(STRATEGIES))
     lines = ["\\begin{tabular}{l" + spec + separator + spec + "}", "\\toprule",
              f"& \\multicolumn{{{2 * n}}}{{c{separator}}}{{Message completion}} & \\multicolumn{{{2 * n}}}{{c}}{{Class-name completion}}\\\\",
              f"\\cmidrule(lr){{2-{2 * n + 1}}}\\cmidrule(lr){{{2 * n + 2}-{4 * n + 1}}}",

@@ -114,6 +114,13 @@ def best_row(values, fmt, higher=True):
     return [f"\\best{{{fmt(v)}}}" if v == target else fmt(v) for v in values]
 
 
+def change_cell(value, reference):
+    """The superscript of every table: the change of a value relative to Semantic, in percent."""
+    change = round((value - reference) / reference * 100) if reference else 0
+    return (f"\\dif{{\\up{{+{change}\\%}}}}" if change > 0 else
+            f"\\dif{{\\down{{{change}\\%}}}}" if change < 0 else "\\dif{0\\%}")
+
+
 def overall_table(sums):
     """Measures in rows; message completion, then class-name completion, side by side."""
     full, top5, test, nontest = sums["summary"], sums["summary-top5"], sums["summary-test"], sums["summary-nontest"]
@@ -126,9 +133,7 @@ def overall_table(sums):
         ref = values[reference]
         for i, v in enumerate(values):
             if i != reference and ref:
-                change = round((v - ref) / ref * 100)
-                cells[i] += (f"\\dif{{\\up{{+{change}\\%}}}}" if change > 0 else
-                             f"\\dif{{\\down{{{change}\\%}}}}" if change < 0 else "\\dif{0\\%}")
+                cells[i] += change_cell(v, ref)
         return cells
 
     blocks = {}
@@ -185,7 +190,8 @@ def gains(m):
     if not m:
         return None
     return {"S": m["Semantic"], "HS": m["History"] - m["Semantic"],
-            "DS": m["Dependency"] - m["Semantic"], "DHD": m["HybridDH"] - m["Dependency"]}
+            "DS": m["Dependency"] - m["Semantic"], "DHD": m["HybridDH"] - m["Dependency"],
+            "mrr": {c: m[c] for c in S}}
 
 
 def thirds(rows, key):
@@ -196,12 +202,17 @@ def thirds(rows, key):
 
 
 def kind_cells(group):
+    """Mean MRR@10 of every configuration over the projects of a group, as in Table 1: every value with
+    its change relative to Semantic in superscript (in percent), the best one marked."""
     if not group:
-        return ["--"] * 6
-    return [f"{mean(r['S'] for r in group):.3f}",
-            signed(mean(r["HS"] for r in group)), f"{sum(r['HS'] > 0 for r in group)}",
-            signed(mean(r["DS"] for r in group)),
-            signed(mean(r["DHD"] for r in group)), f"{sum(r['DHD'] > 0 for r in group)}"]
+        return ["--"] * len(S)
+    values = [mean(r["mrr"][c] for r in group) for c in S]
+    cells = best_row(values, lambda v: f"{v:.3f}")
+    reference = values[S.index("Semantic")]
+    for i, c in enumerate(S):
+        if c != "Semantic":
+            cells[i] += change_cell(values[i], reference)
+    return cells
 
 
 def group_cells(group):
@@ -216,12 +227,13 @@ def pct(v):
 def implications(sums, rows):
     macros = {}
     sep = "!{\\color{black!40}\\vrule width 0.6pt}"
-    columns = "S & H$-$S & H$>$S & D$-$S & DH$-$D & DH$>$D"
-    lines = ["\\begin{tabular}{lr" + sep + "rrrrrr" + sep + "rrrrrr}", "\\toprule",
-             "\\rowcolor{tabhead}& & \\multicolumn{6}{c%s}{Message completion} & \\multicolumn{6}{c}{Class-name completion}\\\\" % sep,
+    n = len(S)
+    columns = " & ".join(f"\\underline{{{c}}}" if s == "Semantic" else c for s, c in zip(S, CODES))
+    lines = ["\\begin{tabular}{lr" + sep + "r" * n + sep + "r" * n + "}", "\\toprule",
+             f"\\rowcolor{{tabhead}}& & \\multicolumn{{{n}}}{{c{sep}}}{{Message completion}} & \\multicolumn{{{n}}}{{c}}{{Class-name completion}}\\\\",
              "\\rowcolor{tabhead}Group & Proj. & " + columns + " & " + columns + "\\\\", "\\midrule",
              "All projects & " + " & ".join(group_cells(rows)) + "\\\\", "\\midrule",
-             "\\multicolumn{14}{l}{\\textit{Share of the expected message tokens found in the history}}\\\\"]
+             "\\multicolumn{16}{l}{\\textit{Share of the expected message tokens found in the history}}\\\\"]
     names = ("Low", "Middle", "High")
     for label, group in zip(names, thirds(rows, "inh")):
         lo, hi = min(r["inh"] for r in group), max(r["inh"] for r in group)
@@ -232,14 +244,14 @@ def implications(sums, rows):
         macros[f"impHist{label}DHD"] = f"{mean(r['DHD'] for r in group):+.3f}"
         macros[f"impHist{label}DHDWins"] = str(sum(r["DHD"] > 0 for r in group))
         macros[f"impHist{label}N"] = str(len(group))
-    lines += ["\\midrule", "\\multicolumn{14}{l}{\\textit{Pace of development (days per replayed commit)}}\\\\"]
+    lines += ["\\midrule", "\\multicolumn{16}{l}{\\textit{Pace of development (days per replayed commit)}}\\\\"]
     for label, group in zip(("Fast", "Medium", "Slow"), thirds(rows, "pace")):
         lo, hi = min(r["pace"] for r in group), max(r["pace"] for r in group)
         lines.append(f"\\quad {label} third ({lo:.1f}--{hi:.1f}) & " + " & ".join(group_cells(group)) + "\\\\")
         macros[f"impPace{label}HS"] = f"{mean(r['HS'] for r in group):+.3f}"
         macros[f"impPace{label}HSWins"] = str(sum(r["HS"] > 0 for r in group))
         macros[f"impPace{label}Range"] = f"{lo:.1f}--{hi:.1f}"
-    lines += ["\\midrule", "\\multicolumn{14}{l}{\\textit{Kind of code of the call site}}\\\\"]
+    lines += ["\\midrule", "\\multicolumn{16}{l}{\\textit{Kind of code of the call site}}\\\\"]
     for scope, label in (("summary-test", "Test code"), ("summary-nontest", "Non-test code")):
         part = sums.get(scope)
         if not part:

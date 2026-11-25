@@ -3,6 +3,9 @@ r"""Group the projects by how they were developed during the replay, and give Ta
 (every configuration over all call sites) for every group of projects and every kind of commit.
 
     clusters.py STORE COMMIT_KINDS_CSV OUTPUT_FOLDER
+    clusters.py --table STORE OUTPUT_FOLDER   only tables/implications-profiles.tex and
+                                              development-profiles.tex again, from the clusters.csv
+                                              and clusters.json of a full run
 
 COMMIT_KINDS_CSV is written by bin/commit-kinds.py: one row per replayed commit, labelled from git
 alone as development (adds at least as many methods as it modifies), bug fix (modifies more than it
@@ -29,6 +32,10 @@ It writes into OUTPUT_FOLDER:
   tables/overall-cluster-<c>.tex     Table 1 (bin/implications.py overall_table) for each cluster
   tables/commit-kinds.tex            the same summary per kind of commit (call sites pooled over projects)
   tables/overall-commit-<k>.tex      Table 1 for the call sites of each kind of commit
+  tables/overall-clusters.tex        Table 1 of the paper for each cluster, then for all the projects,
+                                     stacked in one table (one block of rows per group)
+  tables/development-profiles.tex    the clusters for the paper's body: projects (exploration and
+                                     confirmation), commits that change code, mean share of each kind
   tables/implications-profiles.tex   Table 3 of the paper (bin/implications.py, from $STORE/paper-results-all
                                      and $STORE/repo-features.csv) with two more groups of rows: the
                                      clusters, and the kinds of commit that introduced the call sites
@@ -218,7 +225,7 @@ def profile_table(labels, profile, groups, silhouette_value):
         members = [p for p, l in labels.items() if l == kind]
         summary = groups[kind]
         mean = lambda key: sum(profile[p][key] for p in members) / len(members)
-        lines.append(f"{CLUSTER_NAMES[kind]} & {len(members)} & "
+        lines.append(f"\\textit{{{CLUSTER_NAMES[kind]}}} & {len(members)} & "
                      f"{sum(profile[p]['set'] == 'paper' for p in members)}/{sum(profile[p]['set'] == 'extra' for p in members)} & "
                      f"{sum(profile[p]['code_commits'] for p in members)} & "
                      + " & ".join(f"{100 * mean(k):.0f}\\%" for k in KINDS)
@@ -226,6 +233,66 @@ def profile_table(labels, profile, groups, silhouette_value):
     lines += ["\\midrule", f"\\multicolumn{{8}}{{l}}{{\\textit{{k-means on the three standardized shares, k = {K}; "
                            f"mean silhouette {silhouette_value:.2f}}}}}\\\\", "\\bottomrule", "\\end{tabular}"]
     return "\n".join(lines) + "\n"
+
+
+def development_profiles(rows):
+    """The clusters, from the rows of clusters.csv: projects per set, commits that change code and the
+    mean share of each kind of commit; a last row for all the projects."""
+    lines = ["\\begin{tabular}{lrrrrrrr}", "\\toprule",
+             "\\rowcolor{tabhead}& \\multicolumn{3}{c}{Projects} & \\multicolumn{4}{c}{Commits that change code}\\\\",
+             "\\rowcolor{tabhead}Cluster & All & Expl. & Conf. & Total & Development & Bug fix & Other edit\\\\",
+             "\\midrule"]
+
+    def row(label, members):
+        share = lambda key: f"{100 * sum(float(r[key]) for r in members) / len(members):.0f}\\%"
+        return (f"{label} & {len(members)} & {sum(r['set'] == 'paper' for r in members)} & "
+                f"{sum(r['set'] == 'extra' for r in members)} & "
+                f"{sum(int(r['code_commits']) for r in members):,}".replace(",", "\\,")
+                + " & " + " & ".join(share(k.replace(" ", "_")) for k in KINDS) + "\\\\")
+
+    for kind in KINDS:
+        lines.append(row(f"\\textit{{{CLUSTER_NAMES[kind]}}}", [r for r in rows if r["cluster"] == CLUSTER_NAMES[kind]]))
+    lines += ["\\midrule", row("All projects", rows), "\\bottomrule", "\\end{tabular}"]
+    return "\n".join(lines) + "\n"
+
+
+def stacked_overall(store, output):
+    """Table 1 (bin/implications.py overall_table) of every cluster, then of all the projects, as blocks
+    of rows of one table under one header; None when a part is missing."""
+    folder = os.path.join(store, "paper-results-all")
+    sums = {n: im.load(folder, n) for n in ("summary", "summary-top5", "summary-test", "summary-nontest")}
+    parts = []
+    members = defaultdict(int)
+    for row in csv.DictReader(open(os.path.join(output, "clusters.csv"), newline="")):
+        members[row["cluster"]] += 1
+    for kind in KINDS:
+        path = os.path.join(output, "tables", f"overall-cluster-{SLUG[kind]}.tex")
+        if os.path.exists(path):
+            parts.append((f"\\textit{{{CLUSTER_NAMES[kind]}}} cluster: {members[CLUSTER_NAMES[kind]]} projects", open(path).read()))
+    if sums["summary"]:
+        parts.append((f"Overall: {len(sums['summary']['projects'])} projects", im.overall_table(sums)))
+    if len(parts) != 1 + len(KINDS):
+        return None
+    lines = parts[0][1].splitlines()
+    first_rule = lines.index("\\midrule")
+    header, columns = lines[:first_rule], len(im.S) * 2 + 1
+    out = list(header)
+    for i, (label, table) in enumerate(parts):
+        body = table.splitlines()
+        body = [line for line in body[body.index("\\midrule") + 1:body.index("\\bottomrule")] if line != "\\midrule"]
+        out += ["\\midrule", f"\\multicolumn{{{columns}}}{{l}}{{\\textbf{{{label}}}}}\\\\"] + body  # a rule between groups only
+    out += ["\\bottomrule", "\\end{tabular}"]
+    return "\n".join(out) + "\n"
+
+
+def write_development_profiles(output):
+    rows = list(csv.DictReader(open(os.path.join(output, "clusters.csv"), newline="")))
+    with open(os.path.join(output, "tables", "development-profiles.tex"), "w") as out:
+        out.write(development_profiles(rows))
+    table = stacked_overall(os.path.dirname(os.path.normpath(output)), output)
+    if table:
+        with open(os.path.join(output, "tables", "overall-clusters.tex"), "w") as out:
+            out.write(table)
 
 
 def mann_whitney(xs, ys):
@@ -257,9 +324,9 @@ def site_rows(summary):
     return rows
 
 
-def implications_with_profiles(store, cluster_groups, commit_groups):
+def implications_with_profiles(store, cluster_rows, commit_rows):
     """Table 3 of the paper, as bin/implications.py writes it for all the projects, followed by the
-    clusters and the kinds of commit; None when the summaries of all the projects are missing."""
+    clusters and the kinds of commit (site_rows of each, keyed by kind); None when the summaries of all the projects are missing."""
     folder = os.path.join(store, "paper-results-all")
     features_path = os.path.join(store, "repo-features.csv")
     sums = {n: im.load(folder, n) for n in ("summary", "summary-top5", "summary-test", "summary-nontest")}
@@ -267,11 +334,11 @@ def implications_with_profiles(store, cluster_groups, commit_groups):
         return None
     features = {row["name"]: row for row in csv.DictReader(open(features_path, newline=""))}
     table, _ = im.implications(sums, im.project_rows(sums["summary"], features))
-    rows = ["\\midrule", "\\multicolumn{14}{l}{\\textit{Development profile of the project (cluster)}}\\\\"]
-    rows += [f"\\quad {CLUSTER_NAMES[k]} & " + " & ".join(im.group_cells(site_rows(cluster_groups[k]))) + "\\\\"
+    rows = ["\\midrule", "\\multicolumn{16}{l}{\\textit{Development profile of the project (cluster)}}\\\\"]
+    rows += [f"\\quad \\textit{{{CLUSTER_NAMES[k]}}} & " + " & ".join(im.group_cells(cluster_rows[k])) + "\\\\"
              for k in KINDS]
-    rows += ["\\midrule", "\\multicolumn{14}{l}{\\textit{Kind of commit that introduced the call site}}\\\\"]
-    rows += [f"\\quad {k.capitalize()} & " + " & ".join(im.group_cells(site_rows(commit_groups[k]))) + "\\\\"
+    rows += ["\\midrule", "\\multicolumn{16}{l}{\\textit{Kind of commit that introduced the call site}}\\\\"]
+    rows += [f"\\quad {k.capitalize()} & " + " & ".join(im.group_cells(commit_rows[k])) + "\\\\"
              for k in KINDS]
     return table.replace("\\bottomrule", "\n".join(rows) + "\n\\bottomrule")
 
@@ -282,7 +349,7 @@ def members_table(labels, display):
     for kind in KINDS:
         names = sorted((display[n] for n, l in labels.items() if l == kind), key=str.lower)
         paper = {display[n] for n, l in labels.items() if l == kind and n in PAPER}
-        lines.append(f"{CLUSTER_NAMES[kind]} & {len(names)} & "
+        lines.append(f"\\textit{{{CLUSTER_NAMES[kind]}}} & {len(names)} & "
                      + ", ".join(f"\\textit{{{an.latex_name(x)}}}" if x in paper else an.latex_name(x) for x in names) + "\\\\")
     lines += ["\\bottomrule", "\\end{tabular}"]
     return "\n".join(lines) + "\n"
@@ -353,7 +420,21 @@ def display_inverse(display, name):
     return next(folder for folder, shown in display.items() if shown == name)
 
 
+def write_implications(store, output, rows):
+    table = implications_with_profiles(store, rows["clusters"], rows["commit_kinds"])
+    if table:
+        with open(os.path.join(output, "tables", "implications-profiles.tex"), "w") as out:
+            out.write(table)
+    else:
+        print("no summaries in $STORE/paper-results-all or no repo-features.csv: no implications-profiles.tex")
+
+
 def main():
+    if len(sys.argv) == 4 and sys.argv[1] == "--table":
+        store, output = sys.argv[2:]
+        write_implications(store, output, json.load(open(os.path.join(output, "clusters.json")))["rows"])
+        write_development_profiles(output)
+        return
     if len(sys.argv) != 4:
         sys.exit(__doc__)
     store, kinds_csv, output = sys.argv[1:]
@@ -421,19 +502,15 @@ def main():
         print(f"commits {kind}: {sums['summary']['pooled']['message']['callsites']} message call sites")
 
     with open(os.path.join(output, "tables", "clusters.tex"), "w") as out:
-        out.write(summary_table([(CLUSTER_NAMES[k], cluster_groups[k]) for k in KINDS], "Cluster"))
+        out.write(summary_table([(f"\\textit{{{CLUSTER_NAMES[k]}}}", cluster_groups[k]) for k in KINDS], "Cluster"))
     with open(os.path.join(output, "tables", "cluster-profiles.tex"), "w") as out:
         out.write(profile_table(labels, profile, cluster_groups, silhouette_value))
     with open(os.path.join(output, "tables", "commit-kinds.tex"), "w") as out:
         out.write(summary_table([(k.capitalize() + " commits", commit_groups[k]) for k in KINDS], "Commits"))
-    table = implications_with_profiles(store, cluster_groups, commit_groups)
-    if table:
-        with open(os.path.join(output, "tables", "implications-profiles.tex"), "w") as out:
-            out.write(table)
-    else:
-        print("no summaries in $STORE/paper-results-all or no repo-features.csv: no implications-profiles.tex")
-    everything["rows"] = {"clusters": {CLUSTER_NAMES[k]: site_rows(cluster_groups[k]) for k in KINDS},
+    everything["rows"] = {"clusters": {k: site_rows(cluster_groups[k]) for k in KINDS},
                           "commit_kinds": {k: site_rows(commit_groups[k]) for k in KINDS}}
+    write_implications(store, output, everything["rows"])
+    write_development_profiles(output)
     with open(os.path.join(output, "clusters-macros.tex"), "w") as out:
         out.write("% Written by bin/clusters.py: development profiles of the projects (clusters) and kinds of commits.\n")
         for key, value in sorted(cluster_macros(labels, profile, display, silhouette_value, cluster_groups, commit_groups).items()):
