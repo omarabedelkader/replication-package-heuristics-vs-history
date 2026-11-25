@@ -96,6 +96,8 @@ bin/status.sh         per project: units done / running / failed, least advanced
 bin/load-test.sh      can these projects be run? loads each one as a run starts, completes nothing
 bin/summarize.sh      paper-results (Python analysis of the CSV observations)
 bin/analyze.py        that analysis (see Analysis below)
+bin/commit-kinds.py   labels every replayed commit (development, bug fix, other edit) from git alone
+bin/clusters.py       clusters the projects by their kinds of commits; Table 1 per cluster and per kind
 g5k/submit.sh         OAR reservation (19:00, 14 h, CPU-only node, fallbacks)
 g5k/job.sh            the OAR job: checkpoint signal, one bin/run.sh worker
 pharo/install.st      loads the benchmark (group Bench) + the additions into Pharo 14
@@ -252,6 +254,56 @@ XMLParser (23%), Glorp (30%), Grease (31%), Chanel (55%) and MoTion (58%): there
 many more changes than git (Glorp: 29,865 against 6,238) because loading a commit announced methods
 that it did not change (all of Glorp when its files moved to `src/`, the same few methods at every
 commit), so their history holds methods no developer changed at that time.
+
+## Development profiles: clusters of projects and kinds of commits
+
+Does history help more while a project is being developed than while it is being fixed? Two scripts
+answer it from the existing observations (no new replay):
+
+```
+bin/commit-kinds.py $STORE $STORE/commit-kinds.csv
+bin/clusters.py     $STORE $STORE/commit-kinds.csv $STORE/paper-results-clusters
+```
+
+`bin/commit-kinds.py` rebuilds the replay window of every project as `bin/repo-features.py` does (same
+clones, same `MethodState`), and for every replayed commit counts the methods it **adds** (new keys)
+and **modifies** (existing methods whose source or category changes), the classes it creates, and
+whether its message (for a merge: the pull request's title and branch) names a fix. A commit is
+
+| Kind | Rule |
+|---|---|
+| development | adds at least as many methods as it modifies: mostly new code |
+| bug fix | modifies more methods than it adds, and its message names a fix (`fix`, `bug`, `error`, `crash`, `broken`, `regression`, `typo`, `wrong`, `revert`, ...) |
+| other edit | modifies more methods than it adds, without naming a fix (refactoring, tuning) |
+| no code | changes no method of the replayed packages (no call site comes from it) |
+
+Its counts agree with the benchmark's own (`addedMethods`, `modifiedMethods` of the STON statistics)
+within about 2% (Album: 834/1,280 added/modified against 820/1,265).
+
+`bin/clusters.py` gives every project a profile, the shares of development, bug-fix and other-edit
+commits among its commits that change code, and clusters the projects by k-means (k = 3) on the
+standardized shares. Each cluster is named after the kind of commit most over-represented in its
+centre: **Development**, **Bug fixing**, **Maintenance**. The labels and the clusters come from git
+alone, never from the completion results. Then, with `bin/analyze.py` and `bin/implications.py`
+unchanged, it writes to `paper-results-clusters/`:
+
+- `tables/overall-cluster-{development,bugfix,maintenance}.tex`: Table 1 of the paper (every
+  configuration over all call sites) for the projects of each cluster;
+- `tables/overall-commit-{development,bugfix,maintenance}.tex`: Table 1 for the call sites introduced
+  by each kind of commit, pooled over every project;
+- `tables/clusters.tex`, `tables/commit-kinds.tex`: MRR@10 of every configuration per cluster and per
+  kind of commit, with the projects where History beats Semantic and Hybrid D→H beats Dependency;
+- `tables/implications-profiles.tex`: Table 3 of the paper (`tables/implications.tex`, regenerated
+  by `bin/implications.py` from `$STORE/paper-results-all` and `$STORE/repo-features.csv`) followed
+  by two more groups of rows: the clusters, and the kinds of commit that introduced the call sites.
+  Like the other rows, they give the mean over the projects of Semantic and of the gains;
+- `tables/cluster-profiles.tex`, `tables/cluster-members.tex`, `clusters.csv`, `clusters.json`: the
+  clusters, their mean profile and the cluster of every project;
+- `clusters-macros.tex`: the `\clu...` numbers of the paper's text, including the Mann-Whitney test of
+  the per-project gain of History between the Development and Bug-fixing clusters, per set of projects.
+
+The paper reads these files from its `paper-results/` folder (copy `paper-results-clusters/tables/*.tex`
+and `clusters-macros.tex` there).
 
 ## Validation
 
