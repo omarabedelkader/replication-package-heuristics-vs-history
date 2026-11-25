@@ -15,8 +15,8 @@ summary-test.json, summary-nontest.json); REPO_FEATURES_CSV is $STORE/repo-featu
                             of development) and per kind of code (test, non-test): mean of the
                             projects of Semantic, of History - Semantic, Dependency - Semantic and
                             Hybrid D->H - Dependency, and the number of projects where each is positive.
-  tables/claims.tex         every claim of the paper on the exploration set (paper projects), the
-                            confirmation set (extra projects) and all projects.
+  tables/claims.tex         every claim of the paper on the exploration set, the
+                            confirmation set and all projects.
   implications-macros.tex   \\imp... macros for the text (group bounds and values, Spearman's rho of
                             the share in the history against the gains, per set of projects).
 
@@ -380,8 +380,8 @@ def depth_macros(full):
 
 
 def claims_table(sums, rows, features):
-    """Every claim of the paper, on the exploration set (paper projects), the confirmation set (extra
-    projects) and all projects. Counts are projects; rho is Spearman's over the projects of the set."""
+    """Every claim of the paper, on the exploration set, the confirmation set
+    and all projects. Counts are projects; rho is Spearman's over the projects of the set."""
     sets = (("paper", "Exploration"), ("extra", "Confirmation"), ("", "All"))
 
     def scoped(scope):

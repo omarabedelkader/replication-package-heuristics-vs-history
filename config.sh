@@ -22,7 +22,7 @@ REAL_HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6 || true)"; REAL
 STORE="${STORE:-$REAL_HOME/hvh-store}"
 WORK="${WORK:-/tmp/hvh-$(id -un)}"
 
-# The 29 projects of the paper (selectors of CooHistoryExperimentConfiguration). The longest ones
+# The exploration set: 29 projects (selectors of CooHistoryExperimentConfiguration). The longest ones
 # come first, so they start first when PARALLEL is smaller than the number of projects.
 # Left out of the benchmark's 30: druid (the benchmark's CoTypeInferencer fails on it in the middle
 # of the replay, #lookupSelector: sent to nil, in every run so far: 2026-11-02 and 2026-11-24).
@@ -30,18 +30,18 @@ PAPER_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJav
   polyMath gitProjectHealth mooseIDE chanel famix pharoLauncher treeSitter osSubprocess microdown
   dataFrame alexandrie voyage pillar fame teapot seaside mooseCI tinyLogger roassal moose)
 
-# 71 extra projects, defined by the package (pharo/src/HVH-Replication/
-# CooHistoryExperimentConfiguration.extension.st), to fill a big node. Their results go to
-# $STORE/results-extra and never into the paper results. EXTRA=0 runs the paper's 29 only.
-# Tried and left out: kendrick (its baseline does not load in Pharo 14: "Conflicting repositories"),
+# The confirmation set: 71 projects, defined by the package (pharo/src/HVH-Replication/
+# CooHistoryExperimentConfiguration.extension.st): Pharo projects on GitHub, active since mid-2024,
+# that load in Pharo 14 (bin/load-test.sh). Their results go to $STORE/results-extra;
+# $STORE/paper-results-all analyses both sets. EXTRA=0 runs the exploration set only.
+# Candidates tried and left out, never because of their completion results: kendrick (its baseline does not load in Pharo 14: "Conflicting repositories"),
 # willow, buoy, stargate (ba-st baselines that do not load in Pharo 14), mapless (the benchmark's
 # CoTypeInferencer fails on it: #lookupSelector: sent to nil), cormas (the same failure, at commit
 # 91, in every run so far), codeParadise (one image takes 48 GB).
 EXTRA_PROJECTS=(soil molecule pyramid telescope xmlParser materialDesignLite muTalk coypu
   pharoLanguageServer fast moTion aiGraphAlgorithms petitParser2 taskIt p3 openAPI
   mongoTalk grease parasol neoCSV neoJSON reStore
-  # 49 more (2026-11-25), to reach 100 projects: Pharo projects on GitHub, active since mid-2024, that
-  # load in Pharo 14 (bin/load-test.sh), biggest first. Tried and left out (bin/load-test.sh):
+  # Also tried and left out (bin/load-test.sh):
   # archC (#primPerform:withArguments:inSuperclass: is gone from the Pharo 14 compiler);
   # machineArithmetic (the same); casino (RPackageOrganizer is gone in Pharo 14); magritte (the
   # same); seasideQuasar (the same); coypuIDE (its baseline does not load (STONReaderError));
@@ -51,7 +51,7 @@ EXTRA_PROJECTS=(soil molecule pyramid telescope xmlParser materialDesignLite muT
   # pharoSettings (it needs a settings folder in the home directory); pulsar (loading takes more
   # than 45 minutes); tinyrossa (ByteSymbol>>#asClass is gone); illimani, chrome and pharoMisc
   # load, but replay fewer than 31 commits.
-  # Left out once the run had started (2026-11-25): exercism and egg (none of their older commits can
+  # Left out once the run had started: exercism and egg (none of their older commits can
   # be checked out: nothing is replayed), beacon (once it is loaded, the benchmark itself fails:
   # CooProbe>>#emit), classNameAnalyser (CoTypeInferencer fails on it, as on mapless), foliage (every
   # unit hangs while checking out its commit 47, until the image is killed). In their place, five that

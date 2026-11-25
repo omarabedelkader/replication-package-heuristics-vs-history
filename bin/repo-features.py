@@ -53,7 +53,6 @@ DOMAINS = {
     "openAPI": WEB, "p3": LIB, "parasol": WEB, "petitParser2": LIB, "pharoLanguageServer": TOOL,
     "pyramid": TOOL, "reStore": LIB, "soil": SYS, "taskIt": LIB, "telescope": LIB, "xmlParser": LIB,
     "cormas": APP, "kendrick": APP,
-    # the 49 extra projects added on 2026-11-25
     "artefact": LIB, "ffiCallLogger": TOOL, "packageFormulas": TOOL, "micromaid": LIB, "mustache": LIB,
     "smacc": TOOL, "viennaTalk": TOOL, "bioSmalltalk": APP, "phausto": APP, "pakbot": TOOL,
     "historia": LIB, "reMobidyc": APP, "mcp": WEB, "openTelemetry": LIB,

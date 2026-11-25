@@ -2,7 +2,7 @@ Extension { #name : 'CooHistoryExperimentConfiguration' }
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> soil [
-	"Extra project of the replication package (not in the paper): ApptiveGrid/Soil, branch main."
+	"Project defined by the replication package: ApptiveGrid/Soil, branch main."
 
 	^ self new
 		  name: 'Soil';
@@ -23,7 +23,7 @@ CooHistoryExperimentConfiguration class >> soil [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> molecule [
-	"Extra project of the replication package (not in the paper): OpenSmock/Molecule, branch main."
+	"Project defined by the replication package: OpenSmock/Molecule, branch main."
 
 	^ self new
 		  name: 'Molecule';
@@ -44,7 +44,7 @@ CooHistoryExperimentConfiguration class >> molecule [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pyramid [
-	"Extra project of the replication package (not in the paper): OpenSmock/Pyramid, branch main."
+	"Project defined by the replication package: OpenSmock/Pyramid, branch main."
 
 	^ self new
 		  name: 'Pyramid';
@@ -65,7 +65,7 @@ CooHistoryExperimentConfiguration class >> pyramid [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> telescope [
-	"Extra project of the replication package (not in the paper): TelescopeSt/Telescope, branch development."
+	"Project defined by the replication package: TelescopeSt/Telescope, branch development."
 
 	^ self new
 		  name: 'Telescope';
@@ -86,7 +86,7 @@ CooHistoryExperimentConfiguration class >> telescope [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> xmlParser [
-	"Extra project of the replication package (not in the paper): pharo-contributions/XML-XMLParser, branch master."
+	"Project defined by the replication package: pharo-contributions/XML-XMLParser, branch master."
 
 	^ self new
 		  name: 'XMLParser';
@@ -107,7 +107,7 @@ CooHistoryExperimentConfiguration class >> xmlParser [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> materialDesignLite [
-	"Extra project of the replication package (not in the paper): DuneSt/MaterialDesignLite, branch development."
+	"Project defined by the replication package: DuneSt/MaterialDesignLite, branch development."
 
 	^ self new
 		  name: 'MaterialDesignLite';
@@ -128,7 +128,7 @@ CooHistoryExperimentConfiguration class >> materialDesignLite [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> cormas [
-	"Extra project of the replication package (not in the paper): cormas/cormas, branch master."
+	"Project defined by the replication package: cormas/cormas, branch master."
 
 	^ self new
 		  name: 'Cormas';
@@ -149,7 +149,7 @@ CooHistoryExperimentConfiguration class >> cormas [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> muTalk [
-	"Extra project of the replication package (not in the paper): pharo-contributions/mutalk, branch master."
+	"Project defined by the replication package: pharo-contributions/mutalk, branch master."
 
 	^ self new
 		  name: 'MuTalk';
@@ -170,7 +170,7 @@ CooHistoryExperimentConfiguration class >> muTalk [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> coypu [
-	"Extra project of the replication package (not in the paper): lucretiomsp/Coypu, branch master."
+	"Project defined by the replication package: lucretiomsp/Coypu, branch master."
 
 	^ self new
 		  name: 'Coypu';
@@ -191,7 +191,7 @@ CooHistoryExperimentConfiguration class >> coypu [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pharoLanguageServer [
-	"Extra project of the replication package (not in the paper): badetitou/Pharo-LanguageServer, branch v6."
+	"Project defined by the replication package: badetitou/Pharo-LanguageServer, branch v6."
 
 	^ self new
 		  name: 'PharoLanguageServer';
@@ -212,7 +212,7 @@ CooHistoryExperimentConfiguration class >> pharoLanguageServer [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> fast [
-	"Extra project of the replication package (not in the paper): moosetechnology/FAST, branch v3."
+	"Project defined by the replication package: moosetechnology/FAST, branch v3."
 
 	^ self new
 		  name: 'FAST';
@@ -233,7 +233,7 @@ CooHistoryExperimentConfiguration class >> fast [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> moTion [
-	"Extra project of the replication package (not in the paper): moosetechnology/MoTion, branch main."
+	"Project defined by the replication package: moosetechnology/MoTion, branch main."
 
 	^ self new
 		  name: 'MoTion';
@@ -254,7 +254,7 @@ CooHistoryExperimentConfiguration class >> moTion [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> aiGraphAlgorithms [
-	"Extra project of the replication package (not in the paper): pharo-ai/graph-algorithms, branch master."
+	"Project defined by the replication package: pharo-ai/graph-algorithms, branch master."
 
 	^ self new
 		  name: 'AIGraphAlgorithms';
@@ -275,7 +275,7 @@ CooHistoryExperimentConfiguration class >> aiGraphAlgorithms [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> petitParser2 [
-	"Extra project of the replication package (not in the paper): kursjan/petitparser2, branch master."
+	"Project defined by the replication package: kursjan/petitparser2, branch master."
 
 	^ self new
 		  name: 'PetitParser2';
@@ -296,7 +296,7 @@ CooHistoryExperimentConfiguration class >> petitParser2 [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> taskIt [
-	"Extra project of the replication package (not in the paper): pharo-contributions/taskit, branch master."
+	"Project defined by the replication package: pharo-contributions/taskit, branch master."
 
 	^ self new
 		  name: 'TaskIt';
@@ -317,7 +317,7 @@ CooHistoryExperimentConfiguration class >> taskIt [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> codeParadise [
-	"Extra project of the replication package (not in the paper): ErikOnBike/CodeParadise, branch master."
+	"Project defined by the replication package: ErikOnBike/CodeParadise, branch master."
 
 	^ self new
 		  name: 'CodeParadise';
@@ -338,7 +338,7 @@ CooHistoryExperimentConfiguration class >> codeParadise [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> p3 [
-	"Extra project of the replication package (not in the paper): svenvc/P3, branch master."
+	"Project defined by the replication package: svenvc/P3, branch master."
 
 	^ self new
 		  name: 'P3';
@@ -359,7 +359,7 @@ CooHistoryExperimentConfiguration class >> p3 [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> openAPI [
-	"Extra project of the replication package (not in the paper): ApptiveGrid/OpenAPI, branch master."
+	"Project defined by the replication package: ApptiveGrid/OpenAPI, branch master."
 
 	^ self new
 		  name: 'OpenAPI';
@@ -380,7 +380,7 @@ CooHistoryExperimentConfiguration class >> openAPI [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> mongoTalk [
-	"Extra project of the replication package (not in the paper): pharo-nosql/mongotalk, branch master."
+	"Project defined by the replication package: pharo-nosql/mongotalk, branch master."
 
 	^ self new
 		  name: 'MongoTalk';
@@ -401,7 +401,7 @@ CooHistoryExperimentConfiguration class >> mongoTalk [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> grease [
-	"Extra project of the replication package (not in the paper): SeasideSt/Grease, branch master."
+	"Project defined by the replication package: SeasideSt/Grease, branch master."
 
 	^ self new
 		  name: 'Grease';
@@ -422,7 +422,7 @@ CooHistoryExperimentConfiguration class >> grease [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> parasol [
-	"Extra project of the replication package (not in the paper): SeasideSt/Parasol, branch master."
+	"Project defined by the replication package: SeasideSt/Parasol, branch master."
 
 	^ self new
 		  name: 'Parasol';
@@ -443,7 +443,7 @@ CooHistoryExperimentConfiguration class >> parasol [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> neoCSV [
-	"Extra project of the replication package (not in the paper): svenvc/NeoCSV, branch master."
+	"Project defined by the replication package: svenvc/NeoCSV, branch master."
 
 	^ self new
 		  name: 'NeoCSV';
@@ -464,7 +464,7 @@ CooHistoryExperimentConfiguration class >> neoCSV [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> neoJSON [
-	"Extra project of the replication package (not in the paper): svenvc/NeoJSON, branch master."
+	"Project defined by the replication package: svenvc/NeoJSON, branch master."
 
 	^ self new
 		  name: 'NeoJSON';
@@ -485,7 +485,7 @@ CooHistoryExperimentConfiguration class >> neoJSON [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> reStore [
-	"Extra project of the replication package (not in the paper): rko281/ReStoreForPharo, branch main."
+	"Project defined by the replication package: rko281/ReStoreForPharo, branch main."
 
 	^ self new
 		  name: 'ReStore';
@@ -506,7 +506,7 @@ CooHistoryExperimentConfiguration class >> reStore [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> phausto [
-	"Extra project of the replication package (not in the paper): lucretiomsp/phausto, branch main."
+	"Project defined by the replication package: lucretiomsp/phausto, branch main."
 
 	^ self new
 		  name: 'Phausto';
@@ -527,7 +527,7 @@ CooHistoryExperimentConfiguration class >> phausto [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> exercism [
-	"Extra project of the replication package (not in the paper): exercism/pharo-smalltalk, branch main."
+	"Project defined by the replication package: exercism/pharo-smalltalk, branch main."
 
 	^ self new
 		  name: 'Exercism';
@@ -548,7 +548,7 @@ CooHistoryExperimentConfiguration class >> exercism [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> smacc [
-	"Extra project of the replication package (not in the paper): j-brant/SmaCC, branch master."
+	"Project defined by the replication package: j-brant/SmaCC, branch master."
 
 	^ self new
 		  name: 'SmaCC';
@@ -569,7 +569,7 @@ CooHistoryExperimentConfiguration class >> smacc [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> sqlite3 [
-	"Extra project of the replication package (not in the paper): pharo-rdbms/Pharo-SQLite3, branch master."
+	"Project defined by the replication package: pharo-rdbms/Pharo-SQLite3, branch master."
 
 	^ self new
 		  name: 'SQLite3';
@@ -590,7 +590,7 @@ CooHistoryExperimentConfiguration class >> sqlite3 [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> territorial [
-	"Extra project of the replication package (not in the paper): hernanmd/Territorial, branch master."
+	"Project defined by the replication package: hernanmd/Territorial, branch master."
 
 	^ self new
 		  name: 'Territorial';
@@ -611,7 +611,7 @@ CooHistoryExperimentConfiguration class >> territorial [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> bioSmalltalk [
-	"Extra project of the replication package (not in the paper): hernanmd/BioSmalltalk, branch master."
+	"Project defined by the replication package: hernanmd/BioSmalltalk, branch master."
 
 	^ self new
 		  name: 'BioSmalltalk';
@@ -632,7 +632,7 @@ CooHistoryExperimentConfiguration class >> bioSmalltalk [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> egg [
-	"Extra project of the replication package (not in the paper): powerlang/egg, branch main."
+	"Project defined by the replication package: powerlang/egg, branch main."
 
 	^ self new
 		  name: 'Egg';
@@ -653,7 +653,7 @@ CooHistoryExperimentConfiguration class >> egg [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> viennaTalk [
-	"Extra project of the replication package (not in the paper): tomooda/ViennaTalk, branch main."
+	"Project defined by the replication package: tomooda/ViennaTalk, branch main."
 
 	^ self new
 		  name: 'ViennaTalk';
@@ -674,7 +674,7 @@ CooHistoryExperimentConfiguration class >> viennaTalk [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pakbot [
-	"Extra project of the replication package (not in the paper): pharo-pkg/pakbot, branch master."
+	"Project defined by the replication package: pharo-pkg/pakbot, branch master."
 
 	^ self new
 		  name: 'Pakbot';
@@ -695,7 +695,7 @@ CooHistoryExperimentConfiguration class >> pakbot [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> geoView [
-	"Extra project of the replication package (not in the paper): ThalesGroup/GeoView, branch main."
+	"Project defined by the replication package: ThalesGroup/GeoView, branch main."
 
 	^ self new
 		  name: 'GeoView';
@@ -716,7 +716,7 @@ CooHistoryExperimentConfiguration class >> geoView [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> reMobidyc [
-	"Extra project of the replication package (not in the paper): ReMobidyc/ReMobidyc, branch main."
+	"Project defined by the replication package: ReMobidyc/ReMobidyc, branch main."
 
 	^ self new
 		  name: 'ReMobidyc';
@@ -737,7 +737,7 @@ CooHistoryExperimentConfiguration class >> reMobidyc [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> agenticBrowser [
-	"Extra project of the replication package (not in the paper): mumez/pharo-agentic-browser, branch develop."
+	"Project defined by the replication package: mumez/pharo-agentic-browser, branch develop."
 
 	^ self new
 		  name: 'AgenticBrowser';
@@ -758,7 +758,7 @@ CooHistoryExperimentConfiguration class >> agenticBrowser [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> mcp [
-	"Extra project of the replication package (not in the paper): Evref-BL/MCP, branch main."
+	"Project defined by the replication package: Evref-BL/MCP, branch main."
 
 	^ self new
 		  name: 'MCP';
@@ -779,7 +779,7 @@ CooHistoryExperimentConfiguration class >> mcp [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> rediStick [
-	"Extra project of the replication package (not in the paper): mumez/RediStick, branch master."
+	"Project defined by the replication package: mumez/RediStick, branch master."
 
 	^ self new
 		  name: 'RediStick';
@@ -800,7 +800,7 @@ CooHistoryExperimentConfiguration class >> rediStick [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> rita [
-	"Extra project of the replication package (not in the paper): pharo-vcs/Rita, branch Pharo15."
+	"Project defined by the replication package: pharo-vcs/Rita, branch Pharo15."
 
 	^ self new
 		  name: 'Rita';
@@ -821,7 +821,7 @@ CooHistoryExperimentConfiguration class >> rita [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> openTelemetry [
-	"Extra project of the replication package (not in the paper): Gabriel-Darbord/opentelemetry-pharo, branch main."
+	"Project defined by the replication package: Gabriel-Darbord/opentelemetry-pharo, branch main."
 
 	^ self new
 		  name: 'OpenTelemetry';
@@ -842,7 +842,7 @@ CooHistoryExperimentConfiguration class >> openTelemetry [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> specToplo [
-	"Extra project of the replication package (not in the paper): pharo-graphics/Spec-Toplo, branch dev."
+	"Project defined by the replication package: pharo-graphics/Spec-Toplo, branch dev."
 
 	^ self new
 		  name: 'SpecToplo';
@@ -863,7 +863,7 @@ CooHistoryExperimentConfiguration class >> specToplo [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> classNameAnalyser [
-	"Extra project of the replication package (not in the paper): moosetechnology/ClassNameAnalyser, branch master."
+	"Project defined by the replication package: moosetechnology/ClassNameAnalyser, branch master."
 
 	^ self new
 		  name: 'ClassNameAnalyser';
@@ -884,7 +884,7 @@ CooHistoryExperimentConfiguration class >> classNameAnalyser [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> rewriteToolsSet [
-	"Extra project of the replication package (not in the paper): jordanmontt/RewriteToolsSet, branch master."
+	"Project defined by the replication package: jordanmontt/RewriteToolsSet, branch master."
 
 	^ self new
 		  name: 'RewriteToolsSet';
@@ -905,7 +905,7 @@ CooHistoryExperimentConfiguration class >> rewriteToolsSet [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> asn1 [
-	"Extra project of the replication package (not in the paper): noha/ASN.1, branch master."
+	"Project defined by the replication package: noha/ASN.1, branch master."
 
 	^ self new
 		  name: 'ASN1';
@@ -926,7 +926,7 @@ CooHistoryExperimentConfiguration class >> asn1 [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> webside [
-	"Extra project of the replication package (not in the paper): guillermoamaral/Pharo-Webside, branch main."
+	"Project defined by the replication package: guillermoamaral/Pharo-Webside, branch main."
 
 	^ self new
 		  name: 'Webside';
@@ -947,7 +947,7 @@ CooHistoryExperimentConfiguration class >> webside [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> openSmock [
-	"Extra project of the replication package (not in the paper): OpenSmock/OpenSmock, branch main."
+	"Project defined by the replication package: OpenSmock/OpenSmock, branch main."
 
 	^ self new
 		  name: 'OpenSmock';
@@ -968,7 +968,7 @@ CooHistoryExperimentConfiguration class >> openSmock [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> microKanren [
-	"Extra project of the replication package (not in the paper): massimo-nocentini/microkanrenst, branch master."
+	"Project defined by the replication package: massimo-nocentini/microkanrenst, branch master."
 
 	^ self new
 		  name: 'MicroKanren';
@@ -989,7 +989,7 @@ CooHistoryExperimentConfiguration class >> microKanren [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pharoCIG [
-	"Extra project of the replication package (not in the paper): pharo-cig/pharo-cig, branch main."
+	"Project defined by the replication package: pharo-cig/pharo-cig, branch main."
 
 	^ self new
 		  name: 'PharoCIG';
@@ -1010,7 +1010,7 @@ CooHistoryExperimentConfiguration class >> pharoCIG [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> snapDump [
-	"Extra project of the replication package (not in the paper): ApptiveGrid/SnapDump, branch master."
+	"Project defined by the replication package: ApptiveGrid/SnapDump, branch master."
 
 	^ self new
 		  name: 'SnapDump';
@@ -1031,7 +1031,7 @@ CooHistoryExperimentConfiguration class >> snapDump [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> gitMiner [
-	"Extra project of the replication package (not in the paper): USIREVEAL/gitminer, branch main."
+	"Project defined by the replication package: USIREVEAL/gitminer, branch main."
 
 	^ self new
 		  name: 'GitMiner';
@@ -1052,7 +1052,7 @@ CooHistoryExperimentConfiguration class >> gitMiner [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> seasideBootstrap5 [
-	"Extra project of the replication package (not in the paper): astares/Seaside-Bootstrap5, branch master."
+	"Project defined by the replication package: astares/Seaside-Bootstrap5, branch master."
 
 	^ self new
 		  name: 'SeasideBootstrap5';
@@ -1073,7 +1073,7 @@ CooHistoryExperimentConfiguration class >> seasideBootstrap5 [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> jsonSchema [
-	"Extra project of the replication package (not in the paper): ApptiveGrid/JSONSchema, branch master."
+	"Project defined by the replication package: ApptiveGrid/JSONSchema, branch master."
 
 	^ self new
 		  name: 'JSONSchema';
@@ -1094,7 +1094,7 @@ CooHistoryExperimentConfiguration class >> jsonSchema [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> chipDesigner [
-	"Extra project of the replication package (not in the paper): pavel-krivanek/PharoChipDesigner, branch master."
+	"Project defined by the replication package: pavel-krivanek/PharoChipDesigner, branch master."
 
 	^ self new
 		  name: 'ChipDesigner';
@@ -1115,7 +1115,7 @@ CooHistoryExperimentConfiguration class >> chipDesigner [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> beacon [
-	"Extra project of the replication package (not in the paper): pharo-project/pharo-beacon, branch master."
+	"Project defined by the replication package: pharo-project/pharo-beacon, branch master."
 
 	^ self new
 		  name: 'Beacon';
@@ -1136,7 +1136,7 @@ CooHistoryExperimentConfiguration class >> beacon [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> citezen [
-	"Extra project of the replication package (not in the paper): Ducasse/Citezen, branch master."
+	"Project defined by the replication package: Ducasse/Citezen, branch master."
 
 	^ self new
 		  name: 'Citezen';
@@ -1157,7 +1157,7 @@ CooHistoryExperimentConfiguration class >> citezen [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> awsSDK [
-	"Extra project of the replication package (not in the paper): newapplesho/aws-sdk-smalltalk, branch main."
+	"Project defined by the replication package: newapplesho/aws-sdk-smalltalk, branch main."
 
 	^ self new
 		  name: 'AWSSDK';
@@ -1178,7 +1178,7 @@ CooHistoryExperimentConfiguration class >> awsSDK [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pTerm [
-	"Extra project of the replication package (not in the paper): lxsang/PTerm, branch master."
+	"Project defined by the replication package: lxsang/PTerm, branch master."
 
 	^ self new
 		  name: 'PTerm';
@@ -1199,7 +1199,7 @@ CooHistoryExperimentConfiguration class >> pTerm [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> soup [
-	"Extra project of the replication package (not in the paper): pharo-contributions/Soup, branch master."
+	"Project defined by the replication package: pharo-contributions/Soup, branch master."
 
 	^ self new
 		  name: 'Soup';
@@ -1220,7 +1220,7 @@ CooHistoryExperimentConfiguration class >> soup [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> blocTutorials [
-	"Extra project of the replication package (not in the paper): pharo-graphics/Tutorials, branch master."
+	"Project defined by the replication package: pharo-graphics/Tutorials, branch master."
 
 	^ self new
 		  name: 'BlocTutorials';
@@ -1241,7 +1241,7 @@ CooHistoryExperimentConfiguration class >> blocTutorials [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> seamless [
-	"Extra project of the replication package (not in the paper): pharo-ide/Seamless, branch master."
+	"Project defined by the replication package: pharo-ide/Seamless, branch master."
 
 	^ self new
 		  name: 'Seamless';
@@ -1262,7 +1262,7 @@ CooHistoryExperimentConfiguration class >> seamless [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> jrpc [
-	"Extra project of the replication package (not in the paper): juliendelplanque/JRPC, branch master."
+	"Project defined by the replication package: juliendelplanque/JRPC, branch master."
 
 	^ self new
 		  name: 'JRPC';
@@ -1283,7 +1283,7 @@ CooHistoryExperimentConfiguration class >> jrpc [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> foliage [
-	"Extra project of the replication package (not in the paper): noha/Foliage, branch main."
+	"Project defined by the replication package: noha/Foliage, branch main."
 
 	^ self new
 		  name: 'Foliage';
@@ -1304,7 +1304,7 @@ CooHistoryExperimentConfiguration class >> foliage [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> xmlParserHTML [
-	"Extra project of the replication package (not in the paper): pharo-contributions/XML-XMLParserHTML, branch master."
+	"Project defined by the replication package: pharo-contributions/XML-XMLParserHTML, branch master."
 
 	^ self new
 		  name: 'XMLParserHTML';
@@ -1325,7 +1325,7 @@ CooHistoryExperimentConfiguration class >> xmlParserHTML [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pots [
-	"Extra project of the replication package (not in the paper): robvanlopik/Pots, branch main."
+	"Project defined by the replication package: robvanlopik/Pots, branch main."
 
 	^ self new
 		  name: 'Pots';
@@ -1346,7 +1346,7 @@ CooHistoryExperimentConfiguration class >> pots [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> aiDataInspector [
-	"Extra project of the replication package (not in the paper): pharo-ai/data-inspector, branch master."
+	"Project defined by the replication package: pharo-ai/data-inspector, branch master."
 
 	^ self new
 		  name: 'AIDataInspector';
@@ -1367,7 +1367,7 @@ CooHistoryExperimentConfiguration class >> aiDataInspector [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> methodProxies [
-	"Extra project of the replication package (not in the paper): pharo-contributions/MethodProxies, branch master."
+	"Project defined by the replication package: pharo-contributions/MethodProxies, branch master."
 
 	^ self new
 		  name: 'MethodProxies';
@@ -1388,7 +1388,7 @@ CooHistoryExperimentConfiguration class >> methodProxies [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> mocketry [
-	"Extra project of the replication package (not in the paper): dionisiydk/Mocketry, branch master."
+	"Project defined by the replication package: dionisiydk/Mocketry, branch master."
 
 	^ self new
 		  name: 'Mocketry';
@@ -1409,7 +1409,7 @@ CooHistoryExperimentConfiguration class >> mocketry [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> punQLite [
-	"Extra project of the replication package (not in the paper): mumez/PunQLite, branch develop."
+	"Project defined by the replication package: mumez/PunQLite, branch develop."
 
 	^ self new
 		  name: 'PunQLite';
@@ -1430,7 +1430,7 @@ CooHistoryExperimentConfiguration class >> punQLite [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> zTimestamp [
-	"Extra project of the replication package (not in the paper): svenvc/ztimestamp, branch master."
+	"Project defined by the replication package: svenvc/ztimestamp, branch master."
 
 	^ self new
 		  name: 'ZTimestamp';
@@ -1451,7 +1451,7 @@ CooHistoryExperimentConfiguration class >> zTimestamp [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> novaStelo [
-	"Extra project of the replication package (not in the paper): EiichiroIto/NovaStelo, branch master."
+	"Project defined by the replication package: EiichiroIto/NovaStelo, branch master."
 
 	^ self new
 		  name: 'NovaStelo';
@@ -1472,7 +1472,7 @@ CooHistoryExperimentConfiguration class >> novaStelo [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> stateSpecs [
-	"Extra project of the replication package (not in the paper): dionisiydk/StateSpecs, branch master."
+	"Project defined by the replication package: dionisiydk/StateSpecs, branch master."
 
 	^ self new
 		  name: 'StateSpecs';
@@ -1493,7 +1493,7 @@ CooHistoryExperimentConfiguration class >> stateSpecs [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pharoFunctional [
-	"Extra project of the replication package (not in the paper): dvmason/Pharo-Functional, branch master."
+	"Project defined by the replication package: dvmason/Pharo-Functional, branch master."
 
 	^ self new
 		  name: 'PharoFunctional';
@@ -1514,7 +1514,7 @@ CooHistoryExperimentConfiguration class >> pharoFunctional [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> hiedra [
-	"Extra project of the replication package (not in the paper): tinchodias/hiedra, branch master."
+	"Project defined by the replication package: tinchodias/hiedra, branch master."
 
 	^ self new
 		  name: 'Hiedra';
@@ -1534,7 +1534,7 @@ CooHistoryExperimentConfiguration class >> hiedra [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> artefact [
-	"Extra project of the replication package (not in the paper): pharo-contributions/Artefact, branch development."
+	"Project defined by the replication package: pharo-contributions/Artefact, branch development."
 
 	^ self new
 		  name: 'Artefact';
@@ -1554,7 +1554,7 @@ CooHistoryExperimentConfiguration class >> artefact [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> geoTools [
-	"Extra project of the replication package (not in the paper): ThalesGroup/GeoTools, branch main."
+	"Project defined by the replication package: ThalesGroup/GeoTools, branch main."
 
 	^ self new
 		  name: 'GeoTools';
@@ -1574,7 +1574,7 @@ CooHistoryExperimentConfiguration class >> geoTools [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> meilisearch [
-	"Extra project of the replication package (not in the paper): mumez/Meilisearch.st, branch develop."
+	"Project defined by the replication package: mumez/Meilisearch.st, branch develop."
 
 	^ self new
 		  name: 'Meilisearch';
@@ -1594,7 +1594,7 @@ CooHistoryExperimentConfiguration class >> meilisearch [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> historia [
-	"Extra project of the replication package (not in the paper): mumez/Historia, branch develop."
+	"Project defined by the replication package: mumez/Historia, branch develop."
 
 	^ self new
 		  name: 'Historia';
@@ -1614,7 +1614,7 @@ CooHistoryExperimentConfiguration class >> historia [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> packageFormulas [
-	"Extra project of the replication package (not in the paper): hernanmd/package-formulas, branch master."
+	"Project defined by the replication package: hernanmd/package-formulas, branch master."
 
 	^ self new
 		  name: 'PackageFormulas';
@@ -1634,7 +1634,7 @@ CooHistoryExperimentConfiguration class >> packageFormulas [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> micromaid [
-	"Extra project of the replication package (not in the paper): tomooda/Micromaid, branch main."
+	"Project defined by the replication package: tomooda/Micromaid, branch main."
 
 	^ self new
 		  name: 'Micromaid';
@@ -1654,7 +1654,7 @@ CooHistoryExperimentConfiguration class >> micromaid [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> sauco [
-	"Extra project of the replication package (not in the paper): tinchodias/Sauco, branch master."
+	"Project defined by the replication package: tinchodias/Sauco, branch master."
 
 	^ self new
 		  name: 'Sauco';
@@ -1674,7 +1674,7 @@ CooHistoryExperimentConfiguration class >> sauco [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> ffiCallLogger [
-	"Extra project of the replication package (not in the paper): tinchodias/FFICallLogger, branch master."
+	"Project defined by the replication package: tinchodias/FFICallLogger, branch master."
 
 	^ self new
 		  name: 'FFICallLogger';
@@ -1694,7 +1694,7 @@ CooHistoryExperimentConfiguration class >> ffiCallLogger [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> jsonWebToken [
-	"Extra project of the replication package (not in the paper): noha/JSONWebToken, branch master."
+	"Project defined by the replication package: noha/JSONWebToken, branch master."
 
 	^ self new
 		  name: 'JSONWebToken';
@@ -1714,7 +1714,7 @@ CooHistoryExperimentConfiguration class >> jsonWebToken [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> chartJs [
-	"Extra project of the replication package (not in the paper): DuneSt/ChartJs, branch development."
+	"Project defined by the replication package: DuneSt/ChartJs, branch development."
 
 	^ self new
 		  name: 'ChartJs';
@@ -1734,7 +1734,7 @@ CooHistoryExperimentConfiguration class >> chartJs [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> mustache [
-	"Extra project of the replication package (not in the paper): noha/mustache, branch master."
+	"Project defined by the replication package: noha/mustache, branch master."
 
 	^ self new
 		  name: 'Mustache';
@@ -1754,7 +1754,7 @@ CooHistoryExperimentConfiguration class >> mustache [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pharoOWS [
-	"Extra project of the replication package (not in the paper): ThalesGroup/PharoOWS, branch main."
+	"Project defined by the replication package: ThalesGroup/PharoOWS, branch main."
 
 	^ self new
 		  name: 'PharoOWS';
@@ -1774,7 +1774,7 @@ CooHistoryExperimentConfiguration class >> pharoOWS [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> illimani [
-	"Extra project of the replication package (not in the paper): jordanmontt/illimani-memory-profiler, branch main."
+	"Project defined by the replication package: jordanmontt/illimani-memory-profiler, branch main."
 
 	^ self new
 		  name: 'Illimani';
@@ -1794,7 +1794,7 @@ CooHistoryExperimentConfiguration class >> illimani [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> chrome [
-	"Extra project of the replication package (not in the paper): astares/Pharo-Chrome, branch main."
+	"Project defined by the replication package: astares/Pharo-Chrome, branch main."
 
 	^ self new
 		  name: 'Chrome';
@@ -1814,7 +1814,7 @@ CooHistoryExperimentConfiguration class >> chrome [
 
 { #category : '*HVH-Replication' }
 CooHistoryExperimentConfiguration class >> pharoMisc [
-	"Extra project of the replication package (not in the paper): bouraqadi/PharoMisc, branch pharo12."
+	"Project defined by the replication package: bouraqadi/PharoMisc, branch pharo12."
 
 	^ self new
 		  name: 'PharoMisc';

@@ -1,9 +1,8 @@
 # Replication package: heuristics vs. history in code completion
 
-This package reruns, from scratch, the History experiment of
-[HeuristicCompletion-History](https://github.com/omarabedelkader/HeuristicCompletion-History)
-(branch `better`) on 29 of its 30 Pharo projects (Druid is left out: see `config.sh`). It produces the per-project results, the summary and
-the `paper-results/` folder the paper reads.
+This package reruns, from scratch, the history-aware completion benchmark of the paper
+(`HeuristicCompletion-History`, branch `better`, pinned in `config.sh`) on its 100 Pharo projects. It
+produces the per-project results, the summary and the `paper-results/` folder the paper reads.
 
 It is built for long runs on shared clusters (Grid'5000):
 
@@ -24,40 +23,39 @@ It is built for long runs on shared clusters (Grid'5000):
 All of these are set in `config.sh`. `HCH_COMMIT=latest` follows the tip of `better` instead.
 Every repository is cloned over HTTPS, so no SSH key is needed.
 
-The 29 studied projects are loaded from their branches and replayed over their last 200
-first-parent commits, exactly as the benchmark defines them. Running the package later
-therefore replays more recent histories.
+## The 100 projects
 
-### Extra projects
+Every project is loaded from its branch and replayed over its last 200 first-parent commits.
+Running the package later therefore replays more recent histories. The projects form the two sets
+of the paper (Section 5):
 
-The package also defines 71 **extra projects**, which are not in the paper. The first 22:
-Soil, Molecule, Pyramid, Telescope, XMLParser, MaterialDesignLite, MuTalk, Coypu,
-PharoLanguageServer, FAST, MoTion, AIGraphAlgorithms, PetitParser2, TaskIt, P3, OpenAPI, MongoTalk, Grease, Parasol, NeoCSV, NeoJSON and ReStore (`config.sh` lists the projects
-that were tried and left out, and why). They are defined in
-`pharo/src/HVH-Replication/CooHistoryExperimentConfiguration.extension.st` in the same way as the
-paper's projects: last 200 first-parent commits of the branch that is loaded.
+- the **exploration set** (29 projects, `PAPER_PROJECTS` in `config.sh`), on which the analyses were
+  formed: the projects that the benchmark defines, except Druid (the completion engine's own type
+  inference fails on it during the replay);
+- the **confirmation set** (71 projects, `EXTRA_PROJECTS`), on which they were checked: active Pharo
+  projects on GitHub (Tonel or FileTree, with a `BaselineOf`) that load in Pharo 14. They are defined in
+  `pharo/src/HVH-Replication/CooHistoryExperimentConfiguration.extension.st` in the same way as the
+  others.
 
-49 more were added on 2026-11-25, to study 100 projects: Pharo projects on GitHub (Tonel or
-FileTree, with a `BaselineOf`) with a commit since mid-2024, that load in Pharo 14. Candidates were
-first checked with `bin/load-test.sh`, which loads each project in a fresh copy of the base image as a
-run starts (`pharo/load-test.st`), without completing anything, and reports how many commits its replay
-would have. Of 67 candidates, 52 loaded; the 49 with the longest replays were kept (`config.sh` gives
-the reason for each one left out):
+Candidates were first checked with `bin/load-test.sh`, which loads each project in a fresh copy of the
+base image as a run starts (`pharo/load-test.st`), without completing anything, and reports how many
+commits its replay would have. Candidates were left out only when the benchmark could not run them,
+never because of their completion results; `config.sh` gives the reason for each one:
 
 ```bash
 bin/load-test.sh magritte smacc     # one line per project in $STORE/load-test/results.txt
 ```
 
-Their results go to `STORE/results-extra/` and `STORE/paper-results-extra/`, and
-`STORE/paper-results-all/` covers all 100 projects. `paper-results/` still covers only the paper's 29. `EXTRA=0` runs only
-the 29 (`EXTRA=0 g5k/submit.sh`).
+The results of the exploration set go to `STORE/results/`, those of the confirmation set to
+`STORE/results-extra/`, and `STORE/paper-results-all/` analyses all 100 projects together: it is the
+`paper-results/` folder of the paper. `EXTRA=0` runs only the exploration set (`EXTRA=0 g5k/submit.sh`).
 
 ## Quick start on Grid'5000 (Rennes)
 
 ```bash
 ssh rennes.g5k
-git clone https://github.com/omarabedelkader/replication-package-heuristics-vs-history.git
-cd replication-package-heuristics-vs-history
+git clone <this repository> replication-package
+cd replication-package
 g5k/submit.sh                 # reserves tonight 19:00 -> 09:00 (14 h) on a CPU-only node
 ```
 
@@ -81,7 +79,7 @@ abaca queue (roazhon15: 2 × EPYC 9555, 128 cores) refuses reservations, but tak
 A Pharo VM uses one core, so `bin/run.sh` runs one image per physical core (hyperthreads are not
 counted: every completion's time is measured). The 704 units use as many nodes as you give them;
 4 paradoxe nodes (200 images) run the whole replication in one night. To use another site, set `NODES`, for example
-`NODES="abaca:grdix" g5k/submit.sh` on Nancy or `NODES="default:chirop" g5k/submit.sh` on Lille.
+`NODES="abaca:grdix" g5k/submit.sh` on Nancy.
 Submit from the site whose home holds the store, because Grid'5000 homes are per site.
 
 ## How it works
@@ -163,7 +161,7 @@ pharo/src/HVH-Replication   the additions (Tonel package)
 ## Running elsewhere (any Linux or macOS machine)
 
 ```bash
-bin/run.sh                      # all 29 projects (PARALLEL=8 bin/run.sh to limit)
+bin/run.sh                      # all 100 projects (PARALLEL=8 bin/run.sh to limit)
 bin/run.sh microdown roassal    # some of them
 ```
 
@@ -173,10 +171,12 @@ a crash loses at most the last 30 minutes of each project: run `bin/run.sh` agai
 ## Outputs
 
 - `STORE/results/<project>/`: the merged CSV observations (`*-callsites.csv`, `*-ranks.csv`) and
-  the STON statistics of each project (`STORE/results-extra/` for the extra projects)
+  the STON statistics of each project of the exploration set (`STORE/results-extra/` for the
+  confirmation set)
 - `STORE/units/<unit>/`: the raw results of each unit
-- `STORE/paper-results/`: `results-macros.tex`, `tables/*.tex`, `data/*.dat` and `summary*.json`
-  for the paper's 29 projects; `paper-results-extra/` and `paper-results-all/` likewise
+- `STORE/paper-results-all/`: `results-macros.tex`, `tables/*.tex`, `data/*.dat` and `summary*.json`
+  for the 100 projects, as the paper reads them; `paper-results/` and `paper-results-extra/` likewise
+  for the exploration and the confirmation set alone
 - `STORE/logs/<unit>.log`: one log per unit, with every attempt appended
 
 ## Analysis
@@ -220,9 +220,8 @@ properties over exactly the commits it replayed, and `bin/analyze.py` (third arg
 `bin/summarize.sh`) relates them to the gains of History in two tables:
 `tables/project-features.tex` (the properties of every project, the share of its tokens found in the
 history and the gains of History) and `tables/feature-correlations.tex` (Spearman's ρ of every
-property with every gain, with Holm's correction over the properties). The paper's projects are the
-exploration set and the extra projects the confirmation set: a relation found in the first is
-believable when it holds in the second.
+property with every gain, with Holm's correction over the properties), for the exploration and the
+confirmation set: a relation found in the first is believable when it holds in the second.
 
 | Property | Definition (replayed commits only) | Related work |
 |---|---|---|
@@ -247,11 +246,11 @@ call-site commit); a project for which no single version fits is left out.
 **How the measure was checked.** Methods are compared across files and formats (a method that only
 moves to another file, folder or format, as when Glorp went from FileTree to Tonel, is not a change;
 a change of category or layout is, as for Pharo). For each project, `sites_confirmed` is the share of
-the methods whose call sites the benchmark completed that git shows changed by the same commit. On
-the run of 2026-11-02 it is at least 87% for 41 of the 51 projects (100% for TinyLogger, Seaside,
-FASTJava, Fame, ...; Microdown 99.7%, 1,990 changes against the benchmark's 1,994). It is low for
-XMLParser (23%), Glorp (30%), Grease (31%), Chanel (55%) and MoTion (58%): there the benchmark counted
-many more changes than git (Glorp: 29,865 against 6,238) because loading a commit announced methods
+the methods whose call sites the benchmark completed that git shows changed by the same commit. It
+is at least 87% for 74 of the 100 projects (100% for 20 of them, such as TinyLogger, Seaside, FASTJava
+and Fame; Microdown 99.7%, 1,990 changes against the benchmark's 1,994). It is lowest for Soup (5%),
+Webside (9%), XMLParser (23%), RediStick (27%), Glorp (30%), Grease (31%), AWSSDK (32%) and
+OpenTelemetry (45%): there the benchmark counted many more changes than git (Glorp: 29,865 against 6,238) because loading a commit announced methods
 that it did not change (all of Glorp when its files moved to `src/`, the same few methods at every
 commit), so their history holds methods no developer changed at that time.
 

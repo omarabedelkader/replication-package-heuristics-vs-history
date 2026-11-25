@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Aggregate the finished projects into the paper folder (Python analysis of the CSV observations):
-#   $STORE/paper-results/        tables, plot data and number macros of the paper (its 30 projects)
-#   $STORE/paper-results-extra/  the same for the extra projects
-#   $STORE/paper-results-all/    the same for all the projects
+#   $STORE/paper-results/        tables, plot data and number macros of the exploration set (29 projects)
+#   $STORE/paper-results-extra/  the same for the confirmation set (71 projects)
+#   $STORE/paper-results-all/    the same for all 100 projects: the paper-results/ folder of the paper
 # bin/run.sh calls it once every project is finished; it can be called by hand at any time
 # for an overview of the projects finished so far.
 set -euo pipefail
 PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PKG/config.sh"
 
-# The paper reads the Python analysis of the raw observations (CSV files) of its 30 projects:
+# The paper reads the Python analysis of the raw observations (CSV files) of its projects:
 # tables, plot data, number macros. The units of a project only hold the observations of their
 # strategy, so the per-project figures of the Pharo exporters are not produced: everything comes
 # from the merged CSV files. The analysis is bin/analyze.py: the benchmark's own script
@@ -34,9 +34,9 @@ analyze() { # results directory, output directory
   python3 "$PKG/bin/implications.py" "$2" "$FEATURES"   # the two summary tables of the paper's body
 }
 
-analyze "$STORE/results" "$STORE/paper-results"            # the paper: its 30 projects
+analyze "$STORE/results" "$STORE/paper-results"            # the exploration set
 if ls -d "$STORE/results-extra"/*/ >/dev/null 2>&1; then
-  analyze "$STORE/results-extra" "$STORE/paper-results-extra"
+  analyze "$STORE/results-extra" "$STORE/paper-results-extra"   # the confirmation set
   rm -rf "$STORE/results-all"; mkdir -p "$STORE/results-all"
   for d in "$STORE/results"/*/ "$STORE/results-extra"/*/; do ln -s "${d%/}" "$STORE/results-all/"; done
   analyze "$STORE/results-all" "$STORE/paper-results-all"   # all the projects together

@@ -875,7 +875,7 @@ DOMAIN_CODES = {"Application software": "App", "System software": "Sys", "Web li
                 "Non-web libraries and frameworks": "Lib", "Software tools": "Tool", "Documentation": "Doc"}
 # the gains of History whose association with the properties is measured: (kind, other strategy)
 OUTCOMES = [("message", "Semantic"), ("message", "Dependency"), ("variable", "Semantic"), ("variable", "Dependency")]
-SET_LABELS = {"paper": "Exploration: paper projects", "extra": "Confirmation: extra projects"}
+SET_LABELS = {"paper": "Exploration set", "extra": "Confirmation set"}
 
 
 def load_features(path):

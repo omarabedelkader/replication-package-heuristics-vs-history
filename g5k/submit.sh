@@ -14,13 +14,12 @@
 #               reservations per user and site): g5k/job.sh starts one worker per node; they share
 #               the units. If the HOSTS nodes are not all free, fewer are tried, down to MIN_HOSTS
 #               (default 1).
-#   EXTRA       1 (default): the paper's 29 projects and the 22 extra ones; 0: the 29 only
+#   EXTRA       1 (default): all 100 projects; 0: the 29 projects of the exploration set only
 #   WALLTIME    default 14:00:00
 #   NODES       candidate "queue:cluster" pairs, tried in this order until one is accepted.
 #               Default (Rennes): default:paradoxe  2 x Xeon Gold 5320, 52 cores, 384 GiB, no GPU.
 #               The abaca queue refuses advance reservations, so its nodes (roazhon15: 128 Zen 5
 #               cores) are only usable with `now`: NODES="abaca:roazhon15" g5k/submit.sh now
-#               On Lille: NODES="default:chirop" (but the store must then live on Lille's home).
 set -euo pipefail
 PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PKG/config.sh"
