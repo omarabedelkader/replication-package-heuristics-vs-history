@@ -30,7 +30,7 @@ PAPER_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJav
   polyMath gitProjectHealth mooseIDE chanel famix pharoLauncher treeSitter osSubprocess microdown
   dataFrame alexandrie voyage pillar fame teapot seaside mooseCI tinyLogger roassal moose)
 
-# 22 extra projects, defined by the package (pharo/src/HVH-Replication/
+# 71 extra projects, defined by the package (pharo/src/HVH-Replication/
 # CooHistoryExperimentConfiguration.extension.st), to fill a big node. Their results go to
 # $STORE/results-extra and never into the paper results. EXTRA=0 runs the paper's 29 only.
 # Tried and left out: kendrick (its baseline does not load in Pharo 14: "Conflicting repositories"),
@@ -39,7 +39,33 @@ PAPER_PROJECTS=(fastPython fastTypescript toplo chatPharo glorp openPonk fastJav
 # 91, in every run so far), codeParadise (one image takes 48 GB).
 EXTRA_PROJECTS=(soil molecule pyramid telescope xmlParser materialDesignLite muTalk coypu
   pharoLanguageServer fast moTion aiGraphAlgorithms petitParser2 taskIt p3 openAPI
-  mongoTalk grease parasol neoCSV neoJSON reStore)
+  mongoTalk grease parasol neoCSV neoJSON reStore
+  # 49 more (2026-11-25), to reach 100 projects: Pharo projects on GitHub, active since mid-2024, that
+  # load in Pharo 14 (bin/load-test.sh), biggest first. Tried and left out (bin/load-test.sh):
+  # archC (#primPerform:withArguments:inSuperclass: is gone from the Pharo 14 compiler);
+  # machineArithmetic (the same); casino (RPackageOrganizer is gone in Pharo 14); magritte (the
+  # same); seasideQuasar (the same); coypuIDE (its baseline does not load (STONReaderError));
+  # cozy (loads none of its packages); cryptography (X509Certificate is undeclared);
+  # famixTypeScript (OCMessageNode>>#startsWithDigit is gone); pharoAIActions (the image ends
+  # while loading); telescopeCytoscape (the same); pharoEDA (an error in its baseline);
+  # pharoSettings (it needs a settings folder in the home directory); pulsar (loading takes more
+  # than 45 minutes); tinyrossa (ByteSymbol>>#asClass is gone); illimani, chrome and pharoMisc
+  # load, but replay fewer than 31 commits.
+  # Left out once the run had started (2026-11-25): exercism and egg (none of their older commits can
+  # be checked out: nothing is replayed), beacon (once it is loaded, the benchmark itself fails:
+  # CooProbe>>#emit), classNameAnalyser (CoTypeInferencer fails on it, as on mapless), foliage (every
+  # unit hangs while checking out its commit 47, until the image is killed). In their place, five that
+  # passed bin/load-test.sh --replay: artefact ffiCallLogger packageFormulas micromaid mustache.
+  # Territorial was left out once its run had ended: 192 of its ~199 older commits fail to check out
+  # (#asSymbol sent to nil), then the experiment stops (http status 103): nothing is replayed. In its
+  # place historia, which passed bin/load-test.sh --replay.
+  smacc viennaTalk bioSmalltalk phausto pakbot reMobidyc mcp openTelemetry
+  jsonSchema soup asn1 citezen pharoCIG novaStelo openSmock geoView rediStick agenticBrowser
+  seasideBootstrap5 sqlite3 seamless specToplo rita stateSpecs microKanren mocketry
+  chipDesigner rewriteToolsSet pots awsSDK blocTutorials jrpc snapDump
+  pTerm punQLite aiDataInspector methodProxies pharoFunctional zTimestamp hiedra gitMiner
+  xmlParserHTML webside artefact ffiCallLogger packageFormulas micromaid
+  mustache historia)
 
 if [ "${EXTRA:-1}" = 1 ]; then ALL_PROJECTS=("${PAPER_PROJECTS[@]}" "${EXTRA_PROJECTS[@]}")
 else ALL_PROJECTS=("${PAPER_PROJECTS[@]}"); fi
@@ -60,8 +86,9 @@ UNITS_PER_SLICE=8
 slices_of() {
   case "$1" in
     toplo|fastPython|glorp) echo 8 ;;
-    druid|fastTypescript) echo 4 ;;
+    druid|fastTypescript|smacc) echo 4 ;;
     openPonk|fastJava|chatPharo|bloc|polyMath|gitProjectHealth|mooseIDE|album) echo 2 ;;
+    viennaTalk|bioSmalltalk|phausto) echo 2 ;;
     *) echo 1 ;;
   esac
 }
@@ -71,8 +98,9 @@ slices_of() {
 # (k = slice * number of strategies + strategy index).
 PAIRED="${PAIRED:-1}"
 units_count() { # project: number of units
-  # Seaside starts a web server on a fixed port when it is loaded: one image per node at most.
-  if [ "$PAIRED" = 1 ] && [ "$1" = seaside ]; then echo 1; return; fi
+  # Seaside starts a web server on a fixed port when it is loaded: one image per node at most
+  # (seasideBootstrap5 loads Seaside too).
+  if [ "$PAIRED" = 1 ] && { [ "$1" = seaside ] || [ "$1" = seasideBootstrap5 ]; }; then echo 1; return; fi
   if [ "$PAIRED" = 1 ]; then echo $(( $(slices_of "$1") * UNITS_PER_SLICE )); return; fi
   echo $(( $(slices_of "$1") * ${#STRATEGIES[@]} ))
 }

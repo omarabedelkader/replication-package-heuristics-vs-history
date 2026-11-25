@@ -30,15 +30,26 @@ therefore replays more recent histories.
 
 ### Extra projects
 
-To use the nodes fully, the package also defines 22 **extra projects**, which are not in the paper:
+The package also defines 71 **extra projects**, which are not in the paper. The first 22:
 Soil, Molecule, Pyramid, Telescope, XMLParser, MaterialDesignLite, MuTalk, Coypu,
 PharoLanguageServer, FAST, MoTion, AIGraphAlgorithms, PetitParser2, TaskIt, P3, OpenAPI, MongoTalk, Grease, Parasol, NeoCSV, NeoJSON and ReStore (`config.sh` lists the projects
 that were tried and left out, and why). They are defined in
 `pharo/src/HVH-Replication/CooHistoryExperimentConfiguration.extension.st` in the same way as the
 paper's projects: last 200 first-parent commits of the branch that is loaded.
 
+49 more were added on 2026-11-25, to study 100 projects: Pharo projects on GitHub (Tonel or
+FileTree, with a `BaselineOf`) with a commit since mid-2024, that load in Pharo 14. Candidates were
+first checked with `bin/load-test.sh`, which loads each project in a fresh copy of the base image as a
+run starts (`pharo/load-test.st`), without completing anything, and reports how many commits its replay
+would have. Of 67 candidates, 52 loaded; the 49 with the longest replays were kept (`config.sh` gives
+the reason for each one left out):
+
+```bash
+bin/load-test.sh magritte smacc     # one line per project in $STORE/load-test/results.txt
+```
+
 Their results go to `STORE/results-extra/` and `STORE/paper-results-extra/`, and
-`STORE/paper-results-all/` covers all 51 projects. `paper-results/` still covers only the paper's 29. `EXTRA=0` runs only
+`STORE/paper-results-all/` covers all 100 projects. `paper-results/` still covers only the paper's 29. `EXTRA=0` runs only
 the 29 (`EXTRA=0 g5k/submit.sh`).
 
 ## Quick start on Grid'5000 (Rennes)
@@ -82,6 +93,7 @@ bin/run.sh            worker: claims units, starts / resumes them in parallel, m
 bin/merge-units.py    joins the units of a project into its results
 bin/save-checkpoint.sh  called by an image after it saved itself: archives its directory
 bin/status.sh         per project: units done / running / failed, least advanced running unit
+bin/load-test.sh      can these projects be run? loads each one as a run starts, completes nothing
 bin/summarize.sh      paper-results (Python analysis of the CSV observations)
 bin/analyze.py        that analysis (see Analysis below)
 g5k/submit.sh         OAR reservation (19:00, 14 h, CPU-only node, fallbacks)
@@ -189,6 +201,15 @@ once the History after self rows are removed.
   a class named `*Test`, `*Tests` or `*TestCase` (the tests that Druid and OpenPonk keep in their main
   packages). The two tables partition the call sites of `mrr.tex`; a project without such call sites
   has a row of dashes.
+
+After each analysis, `bin/summarize.sh` runs `bin/implications.py` on the same folder. It only reads
+the summaries above and `repo-features.csv`, and writes the two summary tables of the paper's body:
+`tables/overall.tex` (every configuration over all call sites: MRR@10, MRR@5, test and non-test code,
+Hit@1/10, completion time; message and class-name completion side by side) and
+`tables/implications.tex` (message completion per third of the projects by the share of expected tokens
+found in the history and by pace of development, and per kind of code), with their numbers as
+`\imp...` and `\pop...` macros in `implications-macros.tex`. The per-project tables stay in the
+paper's supplementary material.
 
 ## Project properties
 

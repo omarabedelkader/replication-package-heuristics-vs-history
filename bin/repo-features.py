@@ -53,6 +53,18 @@ DOMAINS = {
     "openAPI": WEB, "p3": LIB, "parasol": WEB, "petitParser2": LIB, "pharoLanguageServer": TOOL,
     "pyramid": TOOL, "reStore": LIB, "soil": SYS, "taskIt": LIB, "telescope": LIB, "xmlParser": LIB,
     "cormas": APP, "kendrick": APP,
+    # the 49 extra projects added on 2026-11-25
+    "artefact": LIB, "ffiCallLogger": TOOL, "packageFormulas": TOOL, "micromaid": LIB, "mustache": LIB,
+    "smacc": TOOL, "viennaTalk": TOOL, "bioSmalltalk": APP, "phausto": APP, "pakbot": TOOL,
+    "historia": LIB, "reMobidyc": APP, "mcp": WEB, "openTelemetry": LIB,
+    "jsonSchema": LIB, "soup": WEB, "asn1": LIB, "citezen": APP, "pharoCIG": TOOL,
+    "novaStelo": APP, "openSmock": LIB, "geoView": LIB, "rediStick": LIB, "agenticBrowser": TOOL,
+    "seasideBootstrap5": WEB, "sqlite3": LIB, "seamless": LIB, "specToplo": LIB, "rita":
+    TOOL, "stateSpecs": LIB, "microKanren": LIB, "mocketry": LIB, "chipDesigner": APP,
+    "rewriteToolsSet": TOOL, "pots": LIB, "awsSDK": WEB,
+    "blocTutorials": DOC, "jrpc": WEB, "snapDump": WEB, "pTerm": APP, "punQLite": LIB,
+    "aiDataInspector": TOOL, "methodProxies": LIB, "pharoFunctional": LIB, "zTimestamp": LIB, "hiedra":
+    LIB, "gitMiner": TOOL, "xmlParserHTML": LIB, "webside": WEB,
 }
 FIELDS = ["project", "name", "set", "domain", "software_tool", "reedit", "authors", "top_author", "pr_merges",
           "age_years", "span_days", "test_share", "churn", "deps",
@@ -132,12 +144,23 @@ def run_info(store, project):
     for log in sorted(glob.glob(os.path.join(store, "logs", f"{project}.*.log"))):
         text = open(log, errors="replace").read()
         replaying = re.findall(r"Replaying (\d+) commits on packages #\(([^)]*)\)", text)
-        if not replaying:
-            continue
-        info["packages"] = set(re.findall(r"'([^']+)'", replaying[-1][1]))
         done = re.findall(r"Commit \d+/(\d+) done", text)
+        repository = (re.findall(r"Running \w+ on (\S+),", text) or [None])[0]
+        if replaying:
+            info["packages"] = set(re.findall(r"'([^']+)'", replaying[-1][1]))
+        elif done and repository:
+            # Some logs lack the "Replaying" line (it goes through the Transcript): the project
+            # packages are then the ones Metacello loaded from the project's repository, without
+            # the BaselineOf, as CooHistoryExperimentRunner computes them.
+            info["packages"] = {name for name in re.findall(
+                r"Loaded -> (\S+) --- " + re.escape(repository), text) if not name.startswith("BaselineOf")}
+            if not info["packages"]:
+                del info["packages"]
+                continue
+        else:
+            continue
         info["replayed"] = int(done[-1]) if done else int(replaying[-1][0]) - 1
-        info["repository"] = (re.findall(r"Running \w+ on (\S+),", text) or [None])[0]
+        info["repository"] = repository
         start = re.findall(r"^======== (\S+ \S+) start", text, re.M)
         info["run_start"] = start[0] if start else None
         break

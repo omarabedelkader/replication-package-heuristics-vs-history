@@ -31,6 +31,7 @@ analyze() { # results directory, output directory
   echo "==> Analysing $n project(s) of $1 into $2"
   rm -rf "$2"
   python3 "$PKG/bin/analyze.py" "$1" "$2" "$FEATURES"
+  python3 "$PKG/bin/implications.py" "$2" "$FEATURES"   # the two summary tables of the paper's body
 }
 
 analyze "$STORE/results" "$STORE/paper-results"            # the paper: its 30 projects
